@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Doctor</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="script.js"></script>
+</head>
+<body class="">
+  <header class="site-header">
+    <div class="container topbar">
+      <a href="index.html" class="brand">
+        <div class="brand-mark">H</div>
+        <div class="brand-copy">
+          Hospital Management
+        </div>
+      </a>
+      <nav class="main-nav">
+        <a class="nav-link" href="admin_dashboard.html">Dashboard</a>
+<a class="nav-link" href="patient_lookup.html">Patients</a>
+<a class="nav-link active" href="staff_management.html">Staff</a>
+<a class="nav-link" href="room_management.html">Rooms</a>
+<a class="nav-link" href="departments_management.html">Departments</a>
+<a class="nav-link" href="reports.html">Reports</a>
+      </nav>
+      <div class="user-chip">
+        <div class="avatar">A</div>
+        <div>Admin</div>
+        <a class="nav-link" href="index.html">Log out</a>
+      </div>
+    </div>
+  </header>
+  
+<main class="page">
+  <section class="hero">
+    <span class="badge">Admin only</span>
+    <h1>Add or Update Doctor</h1>
+  </section>
+
+  <section class="form-card">
+    <form class="stack" data-demo-form="">
+      <div class="form-grid">
+        <div>
+          <label class="required" for="doctorId">Doctor ID</label>
+          <input id="doctorId" type="text" placeholder="D314" required />
+        </div>
+        <div>
+          <label class="required" for="doctorLicense">License Number</label>
+          <input id="doctorLicense" type="text" placeholder="LIC7781" required />
+        </div>
+        <div>
+          <label class="required" for="doctorFirst">First Name</label>
+          <input id="doctorFirst" type="text" placeholder="Hailey" required />
+        </div>
+        <div>
+          <label class="required" for="doctorLast">Last Name</label>
+          <input id="doctorLast" type="text" placeholder="Gergonfosh" required />
+        </div>
+        <div>
+          <label for="doctorContact">Contact Number</label>
+          <input id="doctorContact" type="tel" placeholder="5855550140" />
+        </div>
+        <div>
+          <label class="required" for="doctorDept">Department ID</label>
+          <select id="doctorDept" required>
+            <option value="">Select department</option>
+            <option>DEP01 • Cardiology</option>
+            <option>DEP02 • Emergency</option>
+            <option>DEP03 • ICU</option>
+          </select>
+        </div>
+        <div>
+          <label for="doctorShiftStart">Shift Start</label>
+          <input id="doctorShiftStart" type="time" />
+        </div>
+        <div>
+          <label for="doctorShiftEnd">Shift End</label>
+          <input id="doctorShiftEnd" type="time" />
+        </div>
+        <div>
+          <label for="doctorOnShift">Is On Shift</label>
+          <select id="doctorOnShift">
+            <option>Yes</option>
+            <option>No</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-actions">
+        <a class="btn btn-secondary" href="staff_management.html">Cancel</a>
+        <button class="btn btn-primary" type="submit">Submit</button>
+      </div>
+    </form>
+  </section>
+</main>
+
+</body>
+</html>

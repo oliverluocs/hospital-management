@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient Details</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="script.js"></script>
+</head>
+
+<body class="">
+  <header class="site-header">
+    <div class="container topbar">
+      <a href="index.html" class="brand">
+        <div class="brand-mark">H</div>
+        <div class="brand-copy">
+          Hospital Management
+        </div>
+      </a>
+      <nav class="main-nav">
+        <a class="nav-link" href="admin_dashboard.html">Dashboard</a>
+        <a class="nav-link active" href="patient_lookup.html">Patients</a>
+        <a class="nav-link" href="staff_management.html">Staff</a>
+        <a class="nav-link" href="room_management.html">Rooms</a>
+        <a class="nav-link" href="departments_management.html">Departments</a>
+        <a class="nav-link" href="reports.html">Reports</a>
+      </nav>
+      <div class="user-chip">
+        <div class="avatar">N</div>
+        <div>Nurse</div>
+        <a class="nav-link" href="index.html">Log out</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <span class="badge">Admin, Doctor, Nurse</span>
+      <h1>Patient Details and Update</h1>
+      <p>Complete medical record view with editable clinical fields and summary cards for current status and location.
+      </p>
+    </section>
+
+    <section class="profile-card card">
+      <div class="avatar-large">MJ</div>
+      <div>
+        <h2 class="section-title" style="margin-bottom: 6px;">Mary Johnson</h2>
+        <div class="muted">Patient ID: 100245</div>
+        <div class="muted">Female • DOB 2000-07-01 • 585-555-0184</div>
+      </div>
+      <div class="stack" style="align-items: flex-end;">
+        <span class="badge warning">Recovering</span>
+        <button class="btn btn-primary" type="button">Save Changes</button>
+      </div>
+    </section>
+
+    <section class="kv-row" style="margin-top: 20px;">
+      <article class="kv-item"><span>Current Status</span><strong>Admitted</strong></article>
+      <article class="kv-item"><span>Location</span><strong>Cardiology • Room 205</strong></article>
+      <article class="kv-item"><span>Insurance Number</span><strong>INS 778231</strong></article>
+    </section>
+
+    <section class="split" style="margin-top: 20px;">
+      <div class="form-card">
+        <h2 class="section-title">Clinical details</h2>
+        <form class="stack" data-demo-form="">
+          <div>
+            <label for="detailIllness">Illness</label>
+            <input id="detailIllness" type="text" value="Heart attack" />
+          </div>
+          <div>
+            <label for="detailDiagnosis">Diagnosis Details</label>
+            <textarea
+              id="detailDiagnosis">Patient stabilized after admission. Continue monitoring and cardiac workup.</textarea>
+          </div>
+          <div>
+            <label for="detailStatus">Status</label>
+            <select id="detailStatus">
+              <option>Admitted</option>
+              <option selected>Recovering</option>
+              <option>Stable</option>
+              <option>Critical</option>
+            </select>
+          </div>
+          <div>
+            <label for="detailDepartment">Department Assignment</label>
+            <select id="detailDepartment">
+              <option>Cardiology</option>
+              <option>ICU</option>
+              <option>Emergency</option>
+            </select>
+          </div>
+          <div>
+            <label for="detailRoom">Room Assignment</label>
+            <select id="detailRoom">
+              <option>205</option>
+              <option>201</option>
+              <option>301</option>
+            </select>
+          </div>
+        </form>
+      </div>
+
+      <div class="form-card">
+        <h2 class="section-title">Profile summary</h2>
+        <div class="stack">
+          <div class="kv-item"><span>Height</span><strong>5.40 ft</strong></div>
+          <div class="kv-item"><span>Weight</span><strong>132 lb</strong></div>
+          <div class="kv-item"><span>Time Admitted</span><strong>2026-04-13 09:15</strong></div>
+          <div class="kv-item"><span>Insurance Provider</span><strong>Aetna</strong></div>
+          <div class="kv-item"><span>Role access note</span><strong>Doctors can edit diagnosis, status, and department.
+              Nurses can edit status and room movement within unit.</strong></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+</body>
+
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admit Patient</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="script.js"></script>
+</head>
+
+<body class="">
+  <header class="site-header">
+    <div class="container topbar">
+      <a href="index.html" class="brand">
+        <div class="brand-mark">H</div>
+        <div class="brand-copy">
+          Hospital Management
+        </div>
+      </a>
+      <nav class="main-nav">
+        <a class="nav-link" href="admin_dashboard.html">Dashboard</a>
+        <a class="nav-link active" href="patient_lookup.html">Patients</a>
+        <a class="nav-link" href="staff_management.html">Staff</a>
+        <a class="nav-link" href="room_management.html">Rooms</a>
+        <a class="nav-link" href="departments_management.html">Departments</a>
+        <a class="nav-link" href="reports.html">Reports</a>
+      </nav>
+      <div class="user-chip">
+        <div class="avatar">A</div>
+        <div>Admin</div>
+        <a class="nav-link" href="index.html">Log out</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <span class="badge">Admin and Doctor</span>
+      <h1>Admit New Patient</h1>
+      <p>This form matches the admission wireframe and includes patient attributes from the schema such as insurance,
+        height, and weight.</p>
+    </section>
+
+    <section class="form-card">
+      <form class="stack" data-demo-form="">
+        <div class="form-grid">
+          <div>
+            <label class="required" for="patientFirstName">First Name</label>
+            <input id="patientFirstName" type="text" placeholder="Leanna" required />
+          </div>
+          <div>
+            <label class="required" for="patientLastName">Last Name</label>
+            <input id="patientLastName" type="text" placeholder="Fowler" required />
+          </div>
+          <div>
+            <label class="required" for="patientId">Patient ID</label>
+            <input id="patientId" type="number" placeholder="100245" required />
+          </div>
+          <div>
+            <label for="contactInfo">Contact Info</label>
+            <input id="contactInfo" type="tel" placeholder="5855550123" />
+          </div>
+          <div>
+            <label for="gender">Gender</label>
+            <select id="gender">
+              <option>Female</option>
+              <option>Male</option>
+              <option>Nonbinary</option>
+              <option>Prefer not to say</option>
+            </select>
+          </div>
+          <div>
+            <label for="dob">Date of Birth</label>
+            <input id="dob" type="date" />
+          </div>
+          <div>
+            <label class="required" for="department">Department</label>
+            <select id="department" required>
+              <option value="">Select department</option>
+              <option>Emergency</option>
+              <option>Cardiology</option>
+              <option>ICU</option>
+              <option>Oncology</option>
+              <option>Pediatrics</option>
+            </select>
+          </div>
+          <div>
+            <label for="roomNumber">Room Number</label>
+            <select id="roomNumber">
+              <option value="">Choose available room</option>
+              <option>201</option>
+              <option>205</option>
+              <option>301</option>
+              <option>ER12</option>
+            </select>
+          </div>
+          <div>
+            <label class="required" for="illness">Illness or Reason for Admission</label>
+            <input id="illness" type="text" placeholder="Chest pain" required />
+          </div>
+          <div>
+            <label for="conditionDetails">Condition Details</label>
+            <input id="conditionDetails" type="text" placeholder="Symptoms and notes" />
+          </div>
+          <div>
+            <label class="required" for="timeAdmitted">Time Admitted</label>
+            <input id="timeAdmitted" data-fill-now type="datetime-local" required />
+          </div>
+          <div>
+            <label class="required" for="status">Status</label>
+            <select id="status" required>
+              <option>Admitted</option>
+              <option>Stable</option>
+              <option>Recovering</option>
+              <option>Critical</option>
+            </select>
+          </div>
+          <div>
+            <label for="insurance">Insurance Provider</label>
+            <input id="insurance" type="text" placeholder="Aetna" />
+          </div>
+          <div>
+            <label for="insuranceNum">Insurance Number</label>
+            <input id="insuranceNum" type="text" placeholder="INS 778231" />
+          </div>
+          <div>
+            <label for="height">Height (ft)</label>
+            <input id="height" type="number" step="0.01" placeholder="5.40" />
+          </div>
+          <div>
+            <label for="weight">Weight (lb)</label>
+            <input id="weight" type="number" step="0.01" placeholder="132.00" />
+          </div>
+        </div>
+        <div class="helper">Required fields are marked with an asterisk.</div>
+        <div class="form-actions">
+          <button class="btn btn-secondary" type="reset">Cancel</button>
+          <button class="btn btn-primary" type="submit">Submit</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+</body>
+
+</html>

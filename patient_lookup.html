@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patient Lookup</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="script.js"></script>
+</head>
+
+<body class="">
+  <header class="site-header">
+    <div class="container topbar">
+      <a href="index.html" class="brand">
+        <div class="brand-mark">H</div>
+        <div class="brand-copy">
+          Hospital Management
+        </div>
+      </a>
+      <nav class="main-nav">
+        <a class="nav-link" href="admin_dashboard.html">Dashboard</a>
+        <a class="nav-link active" href="patient_lookup.html">Patients</a>
+        <a class="nav-link" href="staff_management.html">Staff</a>
+        <a class="nav-link" href="room_management.html">Rooms</a>
+        <a class="nav-link" href="departments_management.html">Departments</a>
+        <a class="nav-link" href="reports.html">Reports</a>
+      </nav>
+      <div class="user-chip">
+        <div class="avatar">D</div>
+        <div>Doctor</div>
+        <a class="nav-link" href="index.html">Log out</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <span class="badge">Admin, Doctor, Nurse</span>
+      <h1>Patient Lookup</h1>
+      <p>Search patients by basic or advanced criteria, then open the detail page for a fuller medical record view.</p>
+    </section>
+
+    <section class="table-card">
+      <div class="table-header">
+        <div>
+          <h2 class="section-title">Search filters</h2>
+          <p class="muted">The advanced search matches the fields noted in the wireframe.</p>
+        </div>
+        <div class="chip-group">
+          <button class="btn btn-outline" type="button" data-advanced-toggle="patientAdvanced">Advanced Search</button>
+          <a class="btn btn-primary" href="admit_patient.html">Admit New Patient</a>
+        </div>
+      </div>
+
+      <div class="search-grid">
+        <div>
+          <label for="lookupFirst">First Name</label>
+          <input id="lookupFirst" type="text" placeholder="First name" />
+        </div>
+        <div>
+          <label for="lookupLast">Last Name</label>
+          <input id="lookupLast" type="text" placeholder="Last name" />
+        </div>
+        <div>
+          <label for="lookupDepartment">Department</label>
+          <select id="lookupDepartment">
+            <option value="">All departments</option>
+            <option>Cardiology</option>
+            <option>Emergency</option>
+            <option>ICU</option>
+            <option>Oncology</option>
+            <option>Pediatrics</option>
+          </select>
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <button class="btn btn-primary" type="button">Search</button>
+        </div>
+      </div>
+
+      <div id="patientAdvanced" class="advanced-search">
+        <div class="form-grid">
+          <div>
+            <label for="lookupPatientId">Patient ID</label>
+            <input id="lookupPatientId" type="text" placeholder="100245" />
+          </div>
+          <div>
+            <label for="lookupRoom">Room Number</label>
+            <input id="lookupRoom" type="text" placeholder="205" />
+          </div>
+          <div>
+            <label for="lookupContact">Contact Info</label>
+            <input id="lookupContact" type="text" placeholder="5855550123" />
+          </div>
+          <div>
+            <label for="lookupIllness">Illness</label>
+            <input id="lookupIllness" type="text" placeholder="Heart issue" />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="table-card" style="margin-top: 20px;">
+      <div class="table-header">
+        <div>
+          <h2 class="section-title">Results</h2>
+          <p class="muted">Static sample rows for the lookup screen.</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Patient ID</th>
+              <th>Name</th>
+              <th>Department</th>
+              <th>Room</th>
+              <th>Illness</th>
+              <th>Status</th>
+              <th>Time Admitted</th>
+              <th>Open</th>
+            </tr>
+          </thead>
+          <!-- this is demo data. when we create the actual database and load it with data, we display them instead -->
+          <tbody>
+            <tr>
+              <td>100245</td>
+              <td>Mary Johnson</td>
+              <td>Cardiology</td>
+              <td>205</td>
+              <td>Heart issue</td>
+              <td><span class="badge warning">Recovering</span></td>
+              <td>2026-04-13 09:15</td>
+              <td><a class="btn btn-outline" href="patient_details.html">View</a></td>
+            </tr>
+            <tr>
+              <td>100246</td>
+              <td>Daniel Smith</td>
+              <td>Emergency</td>
+              <td>ER12</td>
+              <td>Broken arm</td>
+              <td><span class="badge success">Stable</span></td>
+              <td>2026-04-13 10:20</td>
+              <td><a class="btn btn-outline" href="patient_details.html">View</a></td>
+            </tr>
+            <tr>
+              <td>100247</td>
+              <td>Nina Patel</td>
+              <td>ICU</td>
+              <td>301</td>
+              <td>Respiratory distress</td>
+              <td><span class="badge danger">Critical</span></td>
+              <td>2026-04-12 22:45</td>
+              <td><a class="btn btn-outline" href="patient_details.html">View</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+</body>
+
+</html>

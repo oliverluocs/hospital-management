@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Add Nurse</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="script.js"></script>
+</head>
+
+<body class="">
+  <header class="site-header">
+    <div class="container topbar">
+      <a href="index.html" class="brand">
+        <div class="brand-mark">H</div>
+        <div class="brand-copy">
+          Hospital Management
+        </div>
+      </a>
+      <nav class="main-nav">
+        <a class="nav-link" href="admin_dashboard.html">Dashboard</a>
+        <a class="nav-link" href="patient_lookup.html">Patients</a>
+        <a class="nav-link active" href="staff_management.html">Staff</a>
+        <a class="nav-link" href="room_management.html">Rooms</a>
+        <a class="nav-link" href="departments_management.html">Departments</a>
+        <a class="nav-link" href="reports.html">Reports</a>
+      </nav>
+      <div class="user-chip">
+        <div class="avatar">A</div>
+        <div>Admin</div>
+        <a class="nav-link" href="index.html">Log out</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <span class="badge">Admin only</span>
+      <h1>Add or Update Nurse</h1>
+      <p>Nurse form mirrors the doctor form while using the NURSE schema and role specific labels.</p>
+    </section>
+
+    <section class="form-card">
+      <form class="stack" data-demo-form="">
+        <div class="form-grid">
+          <div>
+            <label class="required" for="nurseId">Nurse ID</label>
+            <input id="nurseId" type="text" placeholder="N207" required />
+          </div>
+          <div>
+            <label class="required" for="nurseLicense">License Number</label>
+            <input id="nurseLicense" type="text" placeholder="LIC9982" required />
+          </div>
+          <div>
+            <label class="required" for="nurseFirst">First Name</label>
+            <input id="nurseFirst" type="text" placeholder="Olivia" required />
+          </div>
+          <div>
+            <label class="required" for="nurseLast">Last Name</label>
+            <input id="nurseLast" type="text" placeholder="Brown" required />
+          </div>
+          <div>
+            <label for="nurseContact">Contact Number</label>
+            <input id="nurseContact" type="tel" placeholder="5855550112" />
+          </div>
+          <div>
+            <label class="required" for="nurseDept">Department ID</label>
+            <select id="nurseDept" required>
+              <option value="">Select department</option>
+              <option>DEP01 • Cardiology</option>
+              <option>DEP02 • Emergency</option>
+              <option>DEP03 • ICU</option>
+            </select>
+          </div>
+          <div>
+            <label for="nurseShiftStart">Shift Start</label>
+            <input id="nurseShiftStart" type="time" />
+          </div>
+          <div>
+            <label for="nurseShiftEnd">Shift End</label>
+            <input id="nurseShiftEnd" type="time" />
+          </div>
+          <div>
+            <label for="nurseOnShift">Is On Shift</label>
+            <select id="nurseOnShift">
+              <option>Yes</option>
+              <option>No</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-actions">
+          <a class="btn btn-secondary" href="staff_management.html">Cancel</a>
+          <button class="btn btn-primary" type="submit">Submit</button>
+        </div>
+      </form>
+    </section>
+  </main>
+
+</body>
+
+</html>

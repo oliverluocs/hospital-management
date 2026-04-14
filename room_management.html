@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Room Management</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="script.js"></script>
+</head>
+
+<body class="">
+  <header class="site-header">
+    <div class="container topbar">
+      <a href="index.html" class="brand">
+        <div class="brand-mark">H</div>
+        <div class="brand-copy">
+          Hospital Management
+        </div>
+      </a>
+      <nav class="main-nav">
+        <a class="nav-link" href="admin_dashboard.html">Dashboard</a>
+        <a class="nav-link" href="patient_lookup.html">Patients</a>
+        <a class="nav-link" href="staff_management.html">Staff</a>
+        <a class="nav-link active" href="room_management.html">Rooms</a>
+        <a class="nav-link" href="departments_management.html">Departments</a>
+        <a class="nav-link" href="reports.html">Reports</a>
+      </nav>
+      <div class="user-chip">
+        <div class="avatar">A</div>
+        <div>Admin</div>
+        <a class="nav-link" href="index.html">Log out</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <span class="badge">Admin edit • Doctor and Nurse view</span>
+      <h1>Room Management</h1>
+      <p>Search room inventory and open a form to add or update room information.</p>
+    </section>
+
+    <section class="table-card">
+      <div class="table-header">
+        <div>
+          <h2 class="section-title">Search rooms</h2>
+          <p class="muted">Static list with occupancy and cleaning information.</p>
+        </div>
+        <a class="btn btn-primary" href="add_room.html">Add Room</a>
+      </div>
+      <div class="search-grid">
+        <div>
+          <label for="roomNumSearch">Room Number</label>
+          <input id="roomNumSearch" type="text" placeholder="205" />
+        </div>
+        <div>
+          <label for="roomDeptSearch">Department</label>
+          <select id="roomDeptSearch">
+            <option value="">All departments</option>
+            <option>Cardiology</option>
+            <option>Emergency</option>
+            <option>ICU</option>
+            <option>Pediatrics</option>
+          </select>
+        </div>
+        <div>
+          <label for="roomFilledSearch">Is Filled</label>
+          <select id="roomFilledSearch">
+            <option value="">Any</option>
+            <option>No</option>
+            <option>Yes</option>
+          </select>
+        </div>
+        <div>
+          <label>&nbsp;</label>
+          <button class="btn btn-primary" type="button">Search</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="table-card" style="margin-top: 20px;">
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Room #</th>
+              <th>Department</th>
+              <th>Type</th>
+              <th>Is Filled</th>
+              <th>Bed Count</th>
+              <th>Beds Occupied</th>
+              <th>Last Cleaned</th>
+              <th>Open</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>205</td>
+              <td>Cardiology</td>
+              <td>Standard</td>
+              <td>No</td>
+              <td>4</td>
+              <td>2</td>
+              <td>2026-04-12 18:20</td>
+              <td><a class="btn btn-outline" href="add_room.html">Edit</a></td>
+            </tr>
+            <tr>
+              <td>301</td>
+              <td>ICU</td>
+              <td>ICU</td>
+              <td>Yes</td>
+              <td>1</td>
+              <td>1</td>
+              <td>2026-04-13 06:45</td>
+              <td><a class="btn btn-outline" href="add_room.html">Edit</a></td>
+            </tr>
+            <tr>
+              <td>VIP14</td>
+              <td>Oncology</td>
+              <td>VIP</td>
+              <td>No</td>
+              <td>1</td>
+              <td>0</td>
+              <td>2026-04-12 20:10</td>
+              <td><a class="btn btn-outline" href="add_room.html">Edit</a></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+</body>
+
+</html>

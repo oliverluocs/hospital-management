@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Reports</title>
+  <link rel="stylesheet" href="styles.css" />
+  <script defer src="script.js"></script>
+</head>
+
+<body class="">
+  <header class="site-header">
+    <div class="container topbar">
+      <a href="index.html" class="brand">
+        <div class="brand-mark">H</div>
+        <div class="brand-copy">
+          Hospital Management
+        </div>
+      </a>
+      <nav class="main-nav">
+        <a class="nav-link" href="admin_dashboard.html">Dashboard</a>
+        <a class="nav-link" href="patient_lookup.html">Patients</a>
+        <a class="nav-link" href="staff_management.html">Staff</a>
+        <a class="nav-link" href="room_management.html">Rooms</a>
+        <a class="nav-link" href="departments_management.html">Departments</a>
+        <a class="nav-link active" href="reports.html">Reports</a>
+      </nav>
+      <div class="user-chip">
+        <div class="avatar">A</div>
+        <div>Admin</div>
+        <a class="nav-link" href="index.html">Log out</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <span class="badge">Admin only</span>
+      <h1>Reports and Queries</h1>
+      <p>Preset report selector with a preview area and export options to mirror your report page sketch.</p>
+    </section>
+
+    <section class="report-layout">
+      <div class="form-card">
+        <div class="stack">
+          <div>
+            <label for="reportPreset">Report Selector</label>
+            <select id="reportPreset">
+              <option value="">Select a report</option>
+              <option value="rooms">Rooms available by department</option>
+              <option value="admitted">Patients currently admitted by department</option>
+              <option value="occupancy">Occupancy by room type</option>
+              <option value="patientcount">Patient count per department</option>
+            </select>
+          </div>
+
+          <div>
+            <label for="reportName">Report Name</label>
+            <input id="reportName" type="text" placeholder="Morning capacity snapshot" />
+          </div>
+
+          <!-- <button class="btn btn-primary" type="button">Generate Report</button> -->
+
+          <div class="card" style="padding: 18px;">
+            <strong>Export as</strong>
+            <div class="chip-group" style="margin-top: 12px;">
+              <button class="btn btn-primary">CSV</button>
+              <button class="btn btn-primary">JSON</button>
+              <button class="btn btn-primary">PDF</button>
+              <button class="btn btn-primary">TXT</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card report-preview">
+        <div class="table-header">
+          <div>
+            <h2 class="section-title">Report output preview</h2>
+            <p class="muted">Select a preset report to render the sample result table.</p>
+          </div>
+        </div>
+        <div id="reportOutput" class="table-wrap">
+          <div class="empty-state">Select a preset report to preview the output table.</div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+</body>
+
+</html>
