@@ -1,6 +1,116 @@
 
-document.addEventListener("DOMContentLoaded", () => {
-  console.log("admit form:", document.getElementById("admitForm"));
+document.addEventListener("DOMContentLoaded", () => { // read query parameters from the url
+  const params = new URLSearchParams(window.location.search);
+
+  // helper to fetch JSON from a PHP endpoint
+  const fetchJSON = async (url) => {
+    const res = await fetch(url);
+    if (!res.ok) {
+      throw new Error(`request failed for ${url}`);
+    }
+    return res.json()
+  };
+
+  // prevent unsafe HTML from being inserted into tables
+  const escpaeHtml = (value) => {
+    if (value == nil || value == undefined) return "";
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  };
+
+  // convert a datetime or date string into the form of YYYY-MM-DD
+  const toDateInputValue = (value) => {
+    if (!value) return "";
+    return String(value).slice(0, 10);
+  };
+
+  // convert a datetime string into the form of HH:DD
+  const toTimeInputValue = (value) => {
+    if (!value) return "";
+    const str = String(value);
+    return str.length >= 16 ? str.slice(11, 16) : "";
+  };
+
+  // to fit into an <input type="datetime-local">, this is to convert say, "2026-04-19 12:30:00" into "2026-04-19T12:30"
+  const toDatetimeLocalValue = (value) => {
+    if (!value) return "";
+    return String(value).replace(" ", "T").slice(0, 16);
+  };
+
+  // badge colour class to use based on patient status
+  const badgeClassForStatus = (status) => {
+    if (status == "Critical") return "danger";
+    if (status == "Stable") return "success";
+    if (status == "Recovering") return "warning";
+    return "";
+  };
+
+  // load department options into a <select>
+  const loadDepartmentOptions = async (selectId, selectedValue = "") => {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    try {
+      const departments = await fetchJSON("department_api.php");
+      select.innerHTML = `<option value="">Select department</option>`;
+
+      departments.forEach((d) => {
+        const opt = document.createElement("option");
+        opt.value = d.department_id;
+        opt.textContent = `${d.department_id} • ${d.department_name}`;
+        if (d.department_id === selectedValue) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+    } catch (err) {
+      console.error("Department load error:", err);
+    }
+  };
+
+  // load room options for a specific department
+  const loadRoomOptionsByDepartment = async (selectId, departmentId, selectedRoom = "") => {
+    const select = document.getElementById(selectId);
+    if (!select) return;
+
+    select.innerHTML = `<option value="">Choose available room</option>`;
+
+    if (!departmentId) {
+      select.innerHTML = `<option value="">Select department first</option>`;
+      return;
+    }
+
+    try {
+      const rooms = await fetchJSON("room_api.php");
+      const filtered = rooms.filter((r) => {
+        const sameDepartment = r.department_id === departmentId;
+        const hasCapacity = Number(r.occupied) < Number(r.beds_count);
+        const isCurrentRoom = r.room_num === selectedRoom;
+        return sameDepartment && (hasCapacity || isCurrentRoom);
+      });
+
+      select.innerHTML = `<option value="">Choose available room</option>`;
+
+      filtered.forEach((r) => {
+        const opt = document.createElement("option");
+        opt.value = r.room_num;
+        opt.textContent = `${r.room_num} (${r.room_type})`;
+        if (r.room_num === selectedRoom) {
+          opt.selected = true;
+        }
+        select.appendChild(opt);
+      });
+    } catch (err) {
+      console.error("Room load error:", err);
+      select.innerHTML = `<option value="">Error loading rooms</option>`;
+    }
+  };
+
+  // toggle advance search sections open/closed
   document.querySelectorAll("[data-advanced-toggle]").forEach((btn) => {
     btn.addEventListener("click", () => {
       const target = document.getElementById(btn.dataset.advancedToggle);
@@ -9,13 +119,22 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // handle tab switching (i.e., in the doctor/nurse tabs)
   document.querySelectorAll("[data-tab-group]").forEach((group) => {
     const buttons = group.querySelectorAll("[data-tab]");
-    const panels = document.querySelectorAll(`[data-panel-group="${group.dataset.tabGroup}"]`);
+    const panels = document.querySelectorAll(
+      `[data-panel-group="${group.dataset.tabGroup}"]`
+    );
+
     buttons.forEach((btn) => {
       btn.addEventListener("click", () => {
+        // turn off all tab buttons
         buttons.forEach((b) => b.classList.remove("active"));
+
+        // turn on the clicked one
         btn.classList.add("active");
+
+        // show the matching panel and hide the others
         panels.forEach((panel) => {
           panel.classList.toggle("active", panel.dataset.panel === btn.dataset.tab);
         });
@@ -23,6 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // autofill the "time admitted" field with the current local date and time (if field is empty)
   const timeField = document.querySelector("[data-fill-now]");
   if (timeField && !timeField.value) {
     const now = new Date();
@@ -32,6 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
     timeField.value = local;
   }
 
+  // reports page preview logic here:
   const reportSelect = document.getElementById("reportPreset");
   const reportOutput = document.getElementById("reportOutput");
   if (reportSelect && reportOutput) {
@@ -84,13 +205,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const renderReport = () => {
       const key = reportSelect.value;
-      reportOutput.innerHTML = reportSamples[key] || '<div class="empty-state">Select a preset report to preview the output table.</div>';
+      reportOutput.innerHTML =
+        reportSamples[key] ||
+        '<div class="empty-state">Select a preset report to preview the output table.</div>';
     };
 
     reportSelect.addEventListener("change", renderReport);
     renderReport();
   }
 
+  // !! DEMO-ONLY: login form behaviour
+  // !! remember to comment out when actually form behaviour is implemented (aka login procedure)
   document.querySelectorAll("form[data-demo-form]").forEach((form) => {
     form.addEventListener("submit", (event) => {
       event.preventDefault();
@@ -98,187 +223,183 @@ document.addEventListener("DOMContentLoaded", () => {
       if (target) {
         window.location.href = target;
       } else {
-        alert("the form does not submit to a database yet.");
+        alert("The form does not submit to a database yet.");
       }
     });
   });
 
-  fetch("doctor_api.php")
-  .then(res => res.json())
-  .then(data => {
-    let html = "";
 
-    data.forEach(d => {
 
-      const onShiftd = d.is_on_shift === "1" ? "Yes" : "No";
 
-      html += `
-        <tr>
-          <td>${d.first_name}</td>
-          <td>${d.last_name}</td>
-          <td>${d.doctor_id}</td>
-          <td>${d.department_id}</td>
-          <td>${d.shift_start}</td>
-          <td>${d.shift_end}</td>
-          <td>${onShiftd}</td>
-          <td><a class="btn btn-outline" href="add_doctor.html">Edit</a></td>
-        </tr>
-      `;
-    });
+  // --------------
+  // TABLE LOADING SECTIONS: fetch data from PHP endpoints and populate the tables
+  
+  // load doctors into the doctor table (doctor_api)
+  fetch("PHP/doctor_api.php")
+    .then((res) => res.json())
+    .then((data) => {
+      let html = "";
+
+      data.forEach((d) => {
+        const onShift = d.is_on_shift === "1" ? "Yes" : "No";
+
+        html += `
+          <tr>
+            <td>${escapeHtml(d.first_name)}</td>
+            <td>${escapeHtml(d.last_name)}</td>
+            <td>${escapeHtml(d.doctor_id)}</td>
+            <td>${escapeHtml(d.department_id)}</td>
+            <td>${escapeHtml(d.shift_start)}</td>
+            <td>${escapeHtml(d.shift_end)}</td>
+            <td>${onShift}</td>
+            <td><a class="btn btn-outline" href="add_doctor.html?doctor_id=${encodeURIComponent(d.doctor_id)}">Edit</a></td>
+          </tr>
+        `;
+      });
 
       const el = document.getElementById("doctorTable");
       if (el) el.innerHTML = html;
-  });
+    })
+    .catch((err) => console.error("Doctor load error:", err));
 
-  fetch("nurse_api.php")
-  .then(res => res.json())
-  .then(data => {
-    let html = "";
+  // load nurses into the nurse table (nurse_api)
+  fetch("PHP/nurse_api.php")
+    .then((res) => res.json())
+    .then((data) => {
+      let html = "";
 
-    data.forEach(n => {
+      data.forEach((n) => {
+        const onShift = n.is_on_shift === "1" ? "Yes" : "No";
 
-      const onShiftn = n.is_on_shift === "1" ? "Yes" : "No";
-
-      html += `
-        <tr>
-          <td>${n.first_name}</td>
-          <td>${n.last_name}</td>
-          <td>${n.nurse_id}</td>
-          <td>${n.department_id}</td>
-          <td>${n.shift_start}</td>
-          <td>${n.shift_end}</td>
-          <td>${onShiftn}</td>
-          <td><a class="btn btn-outline" href="add_nurse.html">Edit</a></td>
-        </tr>
-      `;
-    });
+        html += `
+          <tr>
+            <td>${escapeHtml(n.first_name)}</td>
+            <td>${escapeHtml(n.last_name)}</td>
+            <td>${escapeHtml(n.nurse_id)}</td>
+            <td>${escapeHtml(n.department_id)}</td>
+            <td>${escapeHtml(n.shift_start)}</td>
+            <td>${escapeHtml(n.shift_end)}</td>
+            <td>${onShift}</td>
+            <td><a class="btn btn-outline" href="add_nurse.html?nurse_id=${encodeURIComponent(n.nurse_id)}">Edit</a></td>
+          </tr>
+        `;
+      });
 
       const el = document.getElementById("nurseTable");
       if (el) el.innerHTML = html;
-  });
+    })
+    .catch((err) => console.error("Nurse load error:", err));
 
-  fetch("patient_api.php")
-  .then(res => res.json())
-  .then(data => {
+  // load patients into the patient table (patient_api)
+  fetch("PHP/patient_api.php")
+    .then((res) => res.json())
+    .then((data) => {
+      let html = "";
 
-    let html = "";
+      data.forEach((p) => {
+        const statusClass = badgeClassForStatus(p.status);
 
-    data.forEach(p => {
+        html += `
+          <tr>
+            <td>${escapeHtml(p.patient_id)}</td>
+            <td>${escapeHtml(p.first_name)} ${escapeHtml(p.last_name)}</td>
+            <td>${escapeHtml(p.department_id)}</td>
+            <td>${escapeHtml(p.room_num)}</td>
+            <td>${escapeHtml(p.illness)}</td>
+            <td>
+              <span class="badge ${statusClass}">
+                ${escapeHtml(p.status)}
+              </span>
+            </td>
+            <td>${escapeHtml(p.time_admitted)}</td>
+            <td>
+              <a class="btn btn-outline" href="patient_details.html?patient_id=${encodeURIComponent(p.patient_id)}">
+                View
+              </a>
+            </td>
+          </tr>
+        `;
+      });
 
-      let statusClass = "";
+      const el = document.getElementById("patientTable");
+      if (el) el.innerHTML = html;
+    })
+    .catch((err) => console.error("Patient load error:", err));
 
-      if (p.status === "Critical") {
-        statusClass = "danger";
-      } else if (p.status === "Stable") {
-        statusClass = "success";
-      } else if (p.status === "Recovering") {
-        statusClass = "warning";
-      }
+  // load departments into the department table (department_api)
+  fetch("PHP/department_api.php")
+    .then((res) => res.json())
+    .then((data) => {
+      let html = "";
 
-      html += `
-        <tr>
-          <td>${p.patient_id}</td>
-          <td>${p.first_name} ${p.last_name}</td>
-          <td>${p.department_id}</td>
-          <td>${p.room_num}</td>
-          <td>${p.illness}</td>
+      data.forEach((d) => {
+        html += `
+          <tr>
+            <td>${escapeHtml(d.department_id)}</td>
+            <td>${escapeHtml(d.department_name)}</td>
+            <td>${escapeHtml(d.department_location)}</td>
+            <td>${escapeHtml(d.beds_total)}</td>
+            <td>${escapeHtml(d.patient_count)}</td>
+            <td>
+              <a class="btn btn-outline" href="add_department.html?department_id=${encodeURIComponent(d.department_id)}">
+                Edit
+              </a>
+            </td>
+          </tr>
+        `;
+      });
 
-          <td>
-            <span class="badge ${statusClass}">
-              ${p.status}
-            </span>
-          </td>
+      const el = document.getElementById("deptTable");
+      if (el) el.innerHTML = html;
+    })
+    .catch((err) => console.error("Department load error:", err));
 
-          <td>${p.time_admitted}</td>
+  // load rooms into the room table (room_api)
+  fetch("PHP/room_api.php")
+    .then((res) => res.json())
+    .then((data) => {
+      let html = "";
 
-          <td>
-            <a class="btn btn-outline" 
-               href="patient_details.html?patient_id=${p.patient_id}">
-              View
-            </a>
-          </td>
-        </tr>
-      `;
-    });
+      data.forEach((r) => {
+        const beds = Number(r.beds_count) || 0;
+        const occupied = Number(r.occupied) || 0;
+        const status = occupied === beds ? "Full" : occupied === 0 ? "Empty" : "Partial";
 
-    const el = document.getElementById("patientTable");
-    if (el) el.innerHTML = html;
-  });
+        html += `
+          <tr>
+            <td>${escapeHtml(r.room_num)}</td>
+            <td>${escapeHtml(r.department_id)}</td>
+            <td>${escapeHtml(r.room_type)}</td>
+            <td>${status}</td>
+            <td>${beds}</td>
+            <td>${occupied}</td>
+            <td>${escapeHtml(r.last_cleaned ?? "-")}</td>
+            <td>
+              <a class="btn btn-outline" href="add_room.html?room_num=${encodeURIComponent(r.room_num)}">
+                Edit
+              </a>
+            </td>
+          </tr>
+        `;
+      });
 
-  fetch("department_api.php")
-  .then(res => res.json())
-  .then(data => {
-
-    let html = "";
-
-    data.forEach(d => {
-
-      html += `
-        <tr>
-          <td>${d.department_id}</td>
-          <td>${d.department_name}</td>
-          <td>${d.department_location}</td>
-          <td>${d.beds_total}</td>
-          <td>${d.patient_count}</td>
-          <td>
-            <a class="btn btn-outline" href="add_department.html?department_id=${d.department_id}">
-              Edit
-            </a>
-          </td>
-        </tr>
-      `;
-    });
-
-    const el = document.getElementById("deptTable");
-    if (el) el.innerHTML = html;
-  });
-
-  fetch("room_api.php")
-  .then(res => res.json())
-  .then(data => {
-
-    let html = "";
-
-    data.forEach(r => {
-
-      const beds = Number(r.beds_count) || 0;
-      const occupied = Number(r.occupied) || 0;
-
-      const status =
-        occupied === beds ? "Full" :
-        occupied === 0 ? "Empty" : "Partial";
-
-      html += `
-        <tr>
-          <td>${r.room_num}</td>
-          <td>${r.department_id}</td>
-          <td>${r.room_type}</td>
-          <td>${status}</td>
-          <td>${beds}</td>
-          <td>${occupied}</td>
-          <td>${r.last_cleaned ?? "-"}</td>
-          <td>
-            <a class="btn btn-outline" href="add_room.html?room=${r.room_num}">
-              Edit
-            </a>
-          </td>
-        </tr>
-      `;
-    });
-
-    const el = document.getElementById("roomTable");
-    if (el) el.innerHTML = html;
-  });
-
+      const el = document.getElementById("roomTable");
+      if (el) el.innerHTML = html;
+    })
+    .catch((err) => console.error("Room load error:", err));
+  
+  
+  // ADMIT PATIENT FORM
   const admitForm = document.getElementById("admitForm");
-
   if (admitForm) {
     admitForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
+      // Convert date of birth into the format the backend expects.
       const dobRaw = document.getElementById("dob").value;
       const DOB = dobRaw ? `${dobRaw} 00:00:00` : null;
 
+      // Build the patient object from the form fields.
       const patient = {
         patient_id: document.getElementById("patientId").value,
         room_num: document.getElementById("roomNumber").value,
@@ -286,7 +407,7 @@ document.addEventListener("DOMContentLoaded", () => {
         last_name: document.getElementById("patientLastName").value,
         contact_info: document.getElementById("contactInfo").value,
         gender: document.getElementById("gender").value,
-        DOB: DOB,
+        DOB,
         illness: document.getElementById("illness").value,
         time_admitted: document.getElementById("timeAdmitted").value,
         status: document.getElementById("status").value,
@@ -296,13 +417,14 @@ document.addEventListener("DOMContentLoaded", () => {
         weight: document.getElementById("weight").value || null
       };
 
+      // Make sure a room was chosen.
       if (!patient.room_num) {
         alert("Please select a room");
         return;
       }
 
       try {
-        const res = await fetch("patientadmit_api.php", {
+        const res = await fetch("PHP/patientadmit_api.php", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -316,21 +438,42 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error(result.error || "Insert failed");
         }
 
-        alert("✅ Patient admitted successfully!");
-
-        // redirect back to patient list
+        alert("Patient admitted successfully!");
         window.location.href = "patient_lookup.html";
-
       } catch (err) {
         console.error("Admit error:", err);
-        alert("❌ " + err.message);
+        alert(err.message);
       }
     });
   }
 
-  const doctorForm = document.querySelector("form");
-
+  // DOCTOR ADD AND EDIT FORM
+  const doctorForm = document.getElementById("doctorForm");
   if (doctorForm) {
+    const doctorIdParam = params.get("doctor_id");
+
+    // If doctor_id exists in the URL, this page is in edit mode.
+    // Load all doctors, find the matching one, and prefill the form.
+    if (doctorIdParam) {
+      fetchJSON("doctor_api.php")
+        .then((data) => {
+          const doctor = data.find((d) => d.doctor_id === doctorIdParam);
+          if (!doctor) return;
+
+          document.getElementById("doctorId").value = doctor.doctor_id || "";
+          document.getElementById("doctorId").readOnly = true; // lock primary key during edit
+          document.getElementById("doctorLicense").value = doctor.license_num || "";
+          document.getElementById("doctorFirst").value = doctor.first_name || "";
+          document.getElementById("doctorLast").value = doctor.last_name || "";
+          document.getElementById("doctorContact").value = doctor.contact_num || "";
+          document.getElementById("doctorDept").value = doctor.department_id || "";
+          document.getElementById("doctorShiftStart").value = toTimeInputValue(doctor.shift_start);
+          document.getElementById("doctorShiftEnd").value = toTimeInputValue(doctor.shift_end);
+          document.getElementById("doctorOnShift").value = doctor.is_on_shift === "1" ? "Yes" : "No";
+        })
+        .catch((err) => console.error("Doctor prefill error:", err));
+    }
+
     doctorForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -341,17 +484,13 @@ document.addEventListener("DOMContentLoaded", () => {
         last_name: document.getElementById("doctorLast").value,
         contact_num: document.getElementById("doctorContact").value || null,
         department_id: document.getElementById("doctorDept").value,
-
         shift_start: document.getElementById("doctorShiftStart").value
           ? `2026-04-19 ${document.getElementById("doctorShiftStart").value}:00`
           : null,
-
         shift_end: document.getElementById("doctorShiftEnd").value
           ? `2026-04-19 ${document.getElementById("doctorShiftEnd").value}:00`
           : null,
-
-        is_on_shift:
-          document.getElementById("doctorOnShift").value === "Yes" ? 1 : 0
+        is_on_shift: document.getElementById("doctorOnShift").value === "Yes" ? 1 : 0
       };
 
       if (!doctor.department_id) {
@@ -360,7 +499,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        const res = await fetch("doctoradd_api.php", {
+        const res = await fetch("PHP/doctoradd_api.php", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -371,23 +510,43 @@ document.addEventListener("DOMContentLoaded", () => {
         const result = await res.json();
 
         if (!res.ok) {
-          throw new Error(result.error || "Insert failed");
+          throw new Error(result.error || "Save failed");
         }
 
-        alert("✅ Doctor added successfully!");
-
+        alert(doctorIdParam ? "Doctor updated successfully!" : "Doctor added successfully!");
         window.location.href = "staff_management.html";
-
       } catch (err) {
-        console.error("Doctor add error:", err);
-        alert("❌ " + err.message);
+        console.error("Doctor save error:", err);
+        alert(err.message);
       }
     });
   }
 
+  // NURSE ADD AND EDIT FORM
   const nurseForm = document.getElementById("nurseForm");
-
   if (nurseForm) {
+    const nurseIdParam = params.get("nurse_id");
+
+    if (nurseIdParam) {
+      fetchJSON("nurse_api.php")
+        .then((data) => {
+          const nurse = data.find((n) => n.nurse_id === nurseIdParam);
+          if (!nurse) return;
+
+          document.getElementById("nurseId").value = nurse.nurse_id || "";
+          document.getElementById("nurseId").readOnly = true;
+          document.getElementById("nurseLicense").value = nurse.license_num || "";
+          document.getElementById("nurseFirst").value = nurse.first_name || "";
+          document.getElementById("nurseLast").value = nurse.last_name || "";
+          document.getElementById("nurseContact").value = nurse.contact_num || "";
+          document.getElementById("nurseDept").value = nurse.department_id || "";
+          document.getElementById("nurseShiftStart").value = toTimeInputValue(nurse.shift_start);
+          document.getElementById("nurseShiftEnd").value = toTimeInputValue(nurse.shift_end);
+          document.getElementById("nurseOnShift").value = nurse.is_on_shift === "1" ? "Yes" : "No";
+        })
+        .catch((err) => console.error("Nurse prefill error:", err));
+    }
+
     nurseForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -398,17 +557,13 @@ document.addEventListener("DOMContentLoaded", () => {
         last_name: document.getElementById("nurseLast").value,
         contact_num: document.getElementById("nurseContact").value || null,
         department_id: document.getElementById("nurseDept").value,
-
         shift_start: document.getElementById("nurseShiftStart").value
           ? `2026-04-19 ${document.getElementById("nurseShiftStart").value}:00`
           : null,
-
         shift_end: document.getElementById("nurseShiftEnd").value
           ? `2026-04-19 ${document.getElementById("nurseShiftEnd").value}:00`
           : null,
-
-        is_on_shift:
-          document.getElementById("nurseOnShift").value === "Yes" ? 1 : 0
+        is_on_shift: document.getElementById("nurseOnShift").value === "Yes" ? 1 : 0
       };
 
       if (!nurse.department_id) {
@@ -417,7 +572,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        const res = await fetch("nurseadd_api.php", {
+        const res = await fetch("PHP/nurseadd_api.php", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -428,22 +583,38 @@ document.addEventListener("DOMContentLoaded", () => {
         const result = await res.json();
 
         if (!res.ok) {
-          throw new Error(result.error || "Insert failed");
+          throw new Error(result.error || "Save failed");
         }
 
-        alert("✅ Nurse added successfully!");
+        alert(nurseIdParam ? "Nurse updated successfully!" : "Nurse added successfully!");
         window.location.href = "staff_management.html";
-
       } catch (err) {
-        console.error("Nurse add error:", err);
-        alert("❌ " + err.message);
+        console.error("Nurse save error:", err);
+        alert(err.message);
       }
     });
   }
 
+  // DEPARTMENT ADD AND EDIT FORM
   const deptForm = document.getElementById("deptForm");
-
   if (deptForm) {
+    const departmentIdParam = params.get("department_id");
+
+    if (departmentIdParam) {
+      fetchJSON("department_api.php")
+        .then((data) => {
+          const department = data.find((d) => d.department_id === departmentIdParam);
+          if (!department) return;
+
+          document.getElementById("deptId").value = department.department_id || "";
+          document.getElementById("deptId").readOnly = true;
+          document.getElementById("deptName").value = department.department_name || "";
+          document.getElementById("deptLocation").value = department.department_location || "";
+          document.getElementById("bedsTotal").value = department.beds_total || "";
+        })
+        .catch((err) => console.error("Department prefill error:", err));
+    }
+
     deptForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -465,7 +636,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        const res = await fetch("departmentadd_api.php", {
+        const res = await fetch("PHP/departmentadd_api.php", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -476,22 +647,40 @@ document.addEventListener("DOMContentLoaded", () => {
         const result = await res.json();
 
         if (!res.ok) {
-          throw new Error(result.error || "Insert failed");
+          throw new Error(result.error || "Save failed");
         }
 
-        alert("✅ Department added successfully!");
+        alert(departmentIdParam ? "Department updated successfully!" : "Department added successfully!");
         window.location.href = "departments_management.html";
-
       } catch (err) {
-        console.error("Department add error:", err);
-        alert("❌ " + err.message);
+        console.error("Department save error:", err);
+        alert(err.message);
       }
     });
   }
 
-  const roomForm = document.querySelector("form");
+  // ROOM ADD AND EDIT FORM
+  const roomForm = document.getElementById("roomForm");
+  if (roomForm) {
+    const roomNumParam = params.get("room_num");
 
-  if (roomForm && document.getElementById("roomNum")) {
+    if (roomNumParam) {
+      fetchJSON("room_api.php")
+        .then((data) => {
+          const room = data.find((r) => r.room_num === roomNumParam);
+          if (!room) return;
+
+          document.getElementById("roomNum").value = room.room_num || "";
+          document.getElementById("roomNum").readOnly = true;
+          document.getElementById("roomDept").value = room.department_id || "";
+          document.getElementById("roomType").value = room.room_type || "";
+          document.getElementById("bedsCount").value = room.beds_count || "";
+          document.getElementById("occupied").value = room.occupied || 0;
+          document.getElementById("lastCleaned").value = toDatetimeLocalValue(room.last_cleaned);
+        })
+        .catch((err) => console.error("Room prefill error:", err));
+    }
+
     roomForm.addEventListener("submit", async (e) => {
       e.preventDefault();
 
@@ -512,7 +701,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
-        const res = await fetch("roomadd_api.php", {
+        const res = await fetch("PHP/roomadd_api.php", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -523,74 +712,151 @@ document.addEventListener("DOMContentLoaded", () => {
         const result = await res.json();
 
         if (!res.ok) {
-          throw new Error(result.error || "Insert failed");
+          throw new Error(result.error || "Save failed");
         }
 
-        alert("🏥 Room added successfully!");
+        alert(roomNumParam ? "Room updated successfully!" : "Room added successfully!");
         window.location.href = "room_management.html";
-
       } catch (err) {
-        console.error("Room add error:", err);
-        alert("❌ " + err.message);
+        console.error("Room save error:", err);
+        alert(err.message);
       }
     });
   }
+  
+  // ------------------
+  // DOCTOR ADD AND EDIT FORM: load department dropdown and then rooms based on chosen department
+  const patientDeptSelect = document.getElementById("patientDept");
+  const patientRoomSelect = document.getElementById("roomNumber");
 
-  fetch("department_api.php")
-  .then(res => res.json())
-  .then(data => {
-    const select = document.getElementById("patientDept");
-    if (!select) return;
+  if (patientDeptSelect) {
+    loadDepartmentOptions("patientDept");
+  }
 
-    select.innerHTML = `<option value="">Select department</option>`;
-
-    data.forEach(d => {
-      const opt = document.createElement("option");
-      opt.value = d.department_id;
-      opt.textContent = `${d.department_id} • ${d.department_name}`;
-      select.appendChild(opt);
+  if (patientDeptSelect && patientRoomSelect) {
+    patientDeptSelect.addEventListener("change", async () => {
+      await loadRoomOptionsByDepartment("roomNumber", patientDeptSelect.value);
     });
-  })
-  .catch(err => console.error("Dept load error:", err));
+  }
 
-  const deptSelect = document.getElementById("patientDept");
-  const roomSelect = document.getElementById("roomNumber");
+  // ------------------
+  // PATIENT DETAILS PAGE
+  const patientDetailsRoot = document.getElementById("patientDetailsRoot");
+  if (patientDetailsRoot) {
+    const patientIdParam = params.get("patient_id");
+    const saveBtn = document.getElementById("patientSaveBtn");
+    const detailDept = document.getElementById("detailDepartment");
+    const detailRoom = document.getElementById("detailRoom");
 
-  if (deptSelect && roomSelect) {
+    // keep the currently loaded patient in memory
+    let currentPatient = null;
 
-    deptSelect.addEventListener("change", async () => {
-      const dept = deptSelect.value;
-
-      roomSelect.innerHTML = `<option value="">Choose available room</option>`;
-
-      if (!dept) {
-        roomSelect.innerHTML = `<option value="">Select department first</option>`;
+    // load the patient's info and fill all the fields
+    const fillPatientDetails = async () => {
+      if (!patientIdParam) {
+        alert("No patient ID was provided.");
         return;
       }
 
       try {
-        const res = await fetch("room_api.php");
-        const data = await res.json();
+        const patients = await fetchJSON("patient_api.php");
+        const patient = patients.find((p) => String(p.patient_id) === String(patientIdParam));
 
-        const filtered = data.filter(r =>
-          r.department_id === dept &&
-          Number(r.occupied) < Number(r.beds_count)
-        );
+        if (!patient) {
+          alert("Patient not found.");
+          return;
+        }
 
-        roomSelect.innerHTML = `<option value="">Choose available room</option>`;
+        currentPatient = patient;
 
-        filtered.forEach(r => {
-          const opt = document.createElement("option");
-          opt.value = r.room_num;
-          opt.textContent = `${r.room_num} (${r.room_type})`;
-          roomSelect.appendChild(opt);
-        });
+        // fill header/profile section
+        const initials = `${patient.first_name?.[0] || ""}${patient.last_name?.[0] || ""}`;
+        document.getElementById("patientAvatar").textContent = initials || "?";
+        document.getElementById("patientName").textContent = `${patient.first_name} ${patient.last_name}`;
+        document.getElementById("patientMeta1").textContent = `Patient ID: ${patient.patient_id}`;
+        document.getElementById("patientMeta2").textContent =
+          `${patient.gender || ""} • DOB ${toDateInputValue(patient.DOB) || "N/A"} • ${patient.contact_info || "N/A"}`;
 
+        // fill status badge
+        const statusBadge = document.getElementById("patientStatusBadge");
+        statusBadge.textContent = patient.status || "Unknown";
+        statusBadge.className = `badge ${badgeClassForStatus(patient.status)}`.trim();
+
+        // fill summary cards
+        document.getElementById("summaryStatus").textContent = patient.status || "N/A";
+        document.getElementById("summaryLocation").textContent =
+          `${patient.department_id || "Unassigned"} • Room ${patient.room_num || "N/A"}`;
+        document.getElementById("summaryInsuranceNumber").textContent = patient.insurance_num || "N/A";
+        document.getElementById("summaryHeight").textContent = patient.height ? `${patient.height} ft` : "N/A";
+        document.getElementById("summaryWeight").textContent = patient.weight ? `${patient.weight} lb` : "N/A";
+        document.getElementById("summaryTimeAdmitted").textContent = patient.time_admitted || "N/A";
+        document.getElementById("summaryInsuranceProvider").textContent = patient.insurance || "N/A";
+
+        // fill editable form fields
+        document.getElementById("detailIllness").value = patient.illness || "";
+        document.getElementById("detailDiagnosis").value = patient.illness || "";
+        document.getElementById("detailStatus").value = patient.status || "Admitted";
+
+        // foad department and room options with current values selected
+        await loadDepartmentOptions("detailDepartment", patient.department_id || "");
+        await loadRoomOptionsByDepartment("detailRoom", patient.department_id, patient.room_num || "");
       } catch (err) {
-        console.error("Room load error:", err);
-        roomSelect.innerHTML = `<option value="">Error loading rooms</option>`;
+        console.error("Patient details load error:", err);
+        alert("Could not load patient details.");
       }
-    });
-  }
+    };
 
+    // ff the department changes: reload room options for that department.
+    if (detailDept && detailRoom) {
+      detailDept.addEventListener("change", async () => {
+        const currentRoom = currentPatient?.room_num || "";
+        await loadRoomOptionsByDepartment("detailRoom", detailDept.value, currentRoom);
+      });
+    }
+
+    // save button sends the updated data to patientupdate_api.php
+    if (saveBtn) {
+      saveBtn.addEventListener("click", async () => {
+        if (!patientIdParam) return;
+
+        const payload = {
+          patient_id: patientIdParam,
+          illness: document.getElementById("detailIllness").value,
+          status: document.getElementById("detailStatus").value,
+          room_num: document.getElementById("detailRoom").value
+        };
+
+        if (!payload.room_num) {
+          alert("Please choose a room before saving.");
+          return;
+        }
+
+        try {
+          const res = await fetch("PHP/patientupdate_api.php", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+          });
+
+          const result = await res.json();
+
+          if (!res.ok) {
+            throw new Error(result.error || "Update failed");
+          }
+
+          alert("Patient updated successfully!");
+
+          // reload the page data after save so the UI reflects the update
+          await fillPatientDetails();
+        } catch (err) {
+          console.error("Patient update error:", err);
+          alert(err.message);
+        }
+      });
+    }
+
+    fillPatientDetails();
+  }
 });

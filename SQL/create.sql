@@ -9,7 +9,7 @@ DROP TABLE IF EXISTS DEPARTMENT;
 CREATE TABLE DEPARTMENT (
     department_id VARCHAR(20) PRIMARY KEY,
     department_name VARCHAR(20),
-    department_location INT,
+    department_location VARCHAR(100),
     beds_total INT
 );
 

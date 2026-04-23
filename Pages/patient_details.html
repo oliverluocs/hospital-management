@@ -5,8 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Patient Details</title>
-  <link rel="stylesheet" href="styles.css" />
-  <script defer src="script.js"></script>
+  <link rel="stylesheet" href="/Style/styles.css" />
+  <script defer src="/Script/script.js"></script>
 </head>
 
 <body class="">
@@ -34,51 +34,47 @@
     </div>
   </header>
 
-  <main class="page">
+  <main class="page" id="patientDetailsRoot">
     <section class="hero">
-      <!-- <span class="badge">Admin, Doctor, Nurse</span> -->
       <h1>Patient Details and Update</h1>
-      <!-- <p>Complete medical record view with editable clinical fields and summary cards for current status and location. -->
-      </p>
     </section>
-
+  
     <section class="profile-card card">
-      <div class="avatar-large">MJ</div>
+      <div class="avatar-large" id="patientAvatar">--</div>
       <div>
-        <h2 class="section-title" style="margin-bottom: 6px;">Mary Johnson</h2>
-        <div class="muted">Patient ID: 100245</div>
-        <div class="muted">Female • DOB 2000-07-01 • 585-555-0184</div>
+        <h2 class="section-title" id="patientName" style="margin-bottom: 6px;">Loading patient...</h2>
+        <div class="muted" id="patientMeta1">Patient ID: --</div>
+        <div class="muted" id="patientMeta2">--</div>
       </div>
       <div class="stack" style="align-items: flex-end;">
-        <span class="badge warning">Recovering</span>
-        <button class="btn btn-primary" type="button">Save Changes</button>
+        <span class="badge" id="patientStatusBadge">--</span>
+        <button class="btn btn-primary" id="patientSaveBtn" type="button">Save Changes</button>
       </div>
     </section>
-
+  
     <section class="kv-row" style="margin-top: 20px;">
-      <article class="kv-item"><span>Current Status</span><strong>Admitted</strong></article>
-      <article class="kv-item"><span>Location</span><strong>Cardiology • Room 205</strong></article>
-      <article class="kv-item"><span>Insurance Number</span><strong>INS 778231</strong></article>
+      <article class="kv-item"><span>Current Status</span><strong id="summaryStatus">--</strong></article>
+      <article class="kv-item"><span>Location</span><strong id="summaryLocation">--</strong></article>
+      <article class="kv-item"><span>Insurance Number</span><strong id="summaryInsuranceNumber">--</strong></article>
     </section>
-
+  
     <section class="split" style="margin-top: 20px;">
       <div class="form-card">
         <h2 class="section-title">Clinical details</h2>
-        <form class="stack" data-demo-form="">
+        <form class="stack" id="patientDetailsForm">
           <div>
             <label for="detailIllness">Illness</label>
-            <input id="detailIllness" type="text" value="Heart attack" />
+            <input id="detailIllness" type="text" />
           </div>
           <div>
             <label for="detailDiagnosis">Diagnosis Details</label>
-            <textarea
-              id="detailDiagnosis">Patient stabilized after admission. Continue monitoring and cardiac workup.</textarea>
+            <textarea id="detailDiagnosis"></textarea>
           </div>
           <div>
             <label for="detailStatus">Status</label>
             <select id="detailStatus">
               <option>Admitted</option>
-              <option selected>Recovering</option>
+              <option>Recovering</option>
               <option>Stable</option>
               <option>Critical</option>
             </select>
@@ -86,29 +82,27 @@
           <div>
             <label for="detailDepartment">Department Assignment</label>
             <select id="detailDepartment">
-              <option>Cardiology</option>
-              <option>ICU</option>
-              <option>Emergency</option>
+              <option value="">Select department</option>
             </select>
           </div>
           <div>
             <label for="detailRoom">Room Assignment</label>
             <select id="detailRoom">
-              <option>205</option>
-              <option>201</option>
-              <option>301</option>
+              <option value="">Choose room</option>
             </select>
           </div>
+          <div class="helper">Diagnosis details are still UI only right now because there is no matching column for them
+            in your current schema.</div>
         </form>
       </div>
-
+  
       <div class="form-card">
         <h2 class="section-title">Profile summary</h2>
         <div class="stack">
-          <div class="kv-item"><span>Height</span><strong>5.40 ft</strong></div>
-          <div class="kv-item"><span>Weight</span><strong>132 lb</strong></div>
-          <div class="kv-item"><span>Time Admitted</span><strong>2026-04-13 09:15</strong></div>
-          <div class="kv-item"><span>Insurance Provider</span><strong>Aetna</strong></div>
+          <div class="kv-item"><span>Height</span><strong id="summaryHeight">--</strong></div>
+          <div class="kv-item"><span>Weight</span><strong id="summaryWeight">--</strong></div>
+          <div class="kv-item"><span>Time Admitted</span><strong id="summaryTimeAdmitted">--</strong></div>
+          <div class="kv-item"><span>Insurance Provider</span><strong id="summaryInsuranceProvider">--</strong></div>
           <div class="kv-item"><span>Role access note</span><strong>Doctors can edit diagnosis, status, and department.
               Nurses can edit status and room movement within unit.</strong></div>
         </div>

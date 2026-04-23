@@ -6,6 +6,12 @@ ini_set('display_errors', 0);
 
 $conn = new mysqli("localhost", "oluo", "vz9Kh6Qj", "oluo_1");
 
+if ($conn->connect_error) {
+    http_response_code(500);
+    echo json_encode(["error" => $conn->connect_error]);
+    exit;
+}
+
 $data = json_decode(file_get_contents("php://input"), true);
 
 if (!$data) {
@@ -14,11 +20,14 @@ if (!$data) {
     exit;
 }
 
-
 $stmt = $conn->prepare("
     INSERT INTO DEPARTMENT
     (department_id, department_name, department_location, beds_total)
     VALUES (?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+      department_name = VALUES(department_name),
+      department_location = VALUES(department_location),
+      beds_total = VALUES(beds_total)
 ");
 
 if (!$stmt) {

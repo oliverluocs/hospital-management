@@ -3,6 +3,12 @@ header("Content-Type: application/json");
 
 $conn = new mysqli("localhost", "oluo", "vz9Kh6Qj", "oluo_1");
 
+if ($conn->connect_error) {
+    http_response_code(500);
+    echo json_encode(["error" => $conn->connect_error]);
+    exit;
+}
+
 $data = json_decode(file_get_contents("php://input"), true);
 
 if (!$data) {
@@ -16,6 +22,15 @@ $stmt = $conn->prepare("
     (doctor_id, department_id, first_name, last_name, contact_num,
      shift_start, shift_end, is_on_shift, license_num)
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ON DUPLICATE KEY UPDATE
+      department_id = VALUES(department_id),
+      first_name = VALUES(first_name),
+      last_name = VALUES(last_name),
+      contact_num = VALUES(contact_num),
+      shift_start = VALUES(shift_start),
+      shift_end = VALUES(shift_end),
+      is_on_shift = VALUES(is_on_shift),
+      license_num = VALUES(license_num)
 ");
 
 if (!$stmt) {
