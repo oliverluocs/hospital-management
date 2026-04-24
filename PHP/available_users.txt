@@ -4,3 +4,22 @@ Available users:
     -> ('D102', 'doctor262', 'Doctor'),
     -> ('N201', 'nurse261', 'Nurse'),
     -> ('N202', 'nurse262', 'Nurse');
+
+
+run this in sql: 
+USE YOUR_DATABASE_NAME_FOR_THIS_PROJECT;
+
+DROP TABLE IF EXISTS APP_USER;
+
+CREATE TABLE APP_USER (
+    user_id VARCHAR(50) PRIMARY KEY,
+    password VARCHAR(100) NOT NULL,
+    role ENUM('Admin','Doctor','Nurse') NOT NULL
+);
+
+INSERT INTO APP_USER (user_id, password, role) VALUES
+('admin01', 'admin261', 'Admin'),
+('D101', 'doctor261', 'Doctor'),
+('D102', 'doctor262', 'Doctor'),
+('N201', 'nurse261', 'Nurse'),
+('N202', 'nurse262', 'Nurse');

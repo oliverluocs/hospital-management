@@ -6,3 +6,11 @@ The system is intended for different types of users, including administrators, d
 Team 8  
 Leanna Fowler  
 Oliver Luo  
+
+
+How to run:
+php -S localhost:8000
+mysql --local-infile=1 --load-data-local-dir="$PWD" -u USERNAME -p
+SOURCE load.sql
+
+Go to browser: "http://localhost:8000/Pages/index.html"
