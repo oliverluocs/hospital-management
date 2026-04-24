@@ -1,0 +1,6 @@
+Available users:
+    -> ('admin01', 'admin261', 'Admin'),
+    -> ('D101', 'doctor261', 'Doctor'),
+    -> ('D102', 'doctor262', 'Doctor'),
+    -> ('N201', 'nurse261', 'Nurse'),
+    -> ('N202', 'nurse262', 'Nurse');

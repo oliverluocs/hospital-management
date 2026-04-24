@@ -1,5 +1,5 @@
 
-document.addEventListener("DOMContentLoaded", () => { // read query parameters from the url
+document.addEventListener("DOMContentLoaded", async () => { // read query parameters from the url
   const params = new URLSearchParams(window.location.search);
 
   // helper to fetch JSON from a PHP endpoint
@@ -214,26 +214,200 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
     renderReport();
   }
 
-  // !! DEMO-ONLY: login form behaviour
-  // !! remember to comment out when actually form behaviour is implemented (aka login procedure)
-  document.querySelectorAll("form[data-demo-form]").forEach((form) => {
-    form.addEventListener("submit", (event) => {
+  // LOGIN FORM BEHAVIOUR
+  const ROLE_HOME = {
+    Admin: "admin_dashboard.html",
+    Doctor: "patient_lookup.html",
+    Nurse: "patient_lookup.html"
+  };
+
+  const PAGE_ACCESS = {
+    "index.html": ["Guest", "Admin", "Doctor", "Nurse"],
+    "admin_dashboard.html": ["Admin"],
+    "staff_management.html": ["Admin"],
+    "add_doctor.html": ["Admin"],
+    "add_nurse.html": ["Admin"],
+    "room_management.html": ["Admin"],
+    "add_room.html": ["Admin"],
+    "departments_management.html": ["Admin"],
+    "add_department.html": ["Admin"],
+    "reports.html": ["Admin"],
+    "patient_lookup.html": ["Admin", "Doctor", "Nurse"],
+    "patient_details.html": ["Admin", "Doctor", "Nurse"],
+    "admit_patient.html": ["Admin", "Doctor"]
+  };
+
+  const currentPage = window.location.pathname.split("/").pop() || "index.html";
+
+  const getRoleHome = (role) => ROLE_HOME[role] || "index.html";
+
+  const getSession = async () => {
+    try {
+      const res = await fetch("../PHP/session_api.php", {
+        credentials: "same-origin"
+      });
+
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      if (!data.logged_in) return null;
+
+      return {
+        userId: data.user_id,
+        role: data.role
+      };
+    } catch (err) {
+      console.error("Session check error:", err);
+      return null;
+    }
+  };
+
+  const updateUserChip = (session) => {
+    const chip = document.querySelector(".user-chip");
+    if (!chip) return;
+
+    const avatar = chip.querySelector(".avatar");
+    const divs = chip.querySelectorAll("div");
+    const label = divs.length > 1 ? divs[1] : null;
+
+    if (!session) {
+      if (avatar) avatar.textContent = "?";
+      if (label) label.textContent = "Guest";
+      return;
+    }
+
+    if (avatar) avatar.textContent = session.role.charAt(0).toUpperCase();
+    if (label) label.textContent = `${session.role} • ${session.userId}`;
+  };
+
+  const updateNavForRole = (session) => {
+    const role = session?.role || "Guest";
+
+    document.querySelectorAll(".main-nav .nav-link").forEach((link) => {
+      const href = link.getAttribute("href");
+      if (!href) return;
+
+      const allowedRoles = PAGE_ACCESS[href];
+      if (!allowedRoles) return;
+
+      link.style.display = allowedRoles.includes(role) ? "" : "none";
+    });
+
+    const toggleDisplay = (selector, show) => {
+      document.querySelectorAll(selector).forEach((el) => {
+        el.style.display = show ? "" : "none";
+      });
+    };
+
+    const isAdmin = role === "Admin";
+    const isDoctor = role === "Doctor";
+
+    toggleDisplay(
+      'a[href="staff_management.html"], a[href="add_doctor.html"], a[href="add_nurse.html"], a[href="room_management.html"], a[href="add_room.html"], a[href="departments_management.html"], a[href="add_department.html"], a[href="reports.html"], a[href="admin_dashboard.html"]',
+      isAdmin
+    );
+
+    toggleDisplay('a[href="admit_patient.html"]', isAdmin || isDoctor);
+  };
+
+  const handleAccessControl = async () => {
+    const session = await getSession();
+
+    if (currentPage === "index.html") {
+      if (session) {
+        window.location.href = getRoleHome(session.role);
+        return true;
+      }
+      return false;
+    }
+
+    if (!session) {
+      window.location.href = "index.html";
+      return true;
+    }
+
+    const allowedRoles = PAGE_ACCESS[currentPage];
+    if (allowedRoles && !allowedRoles.includes(session.role)) {
+      window.location.href = getRoleHome(session.role);
+      return true;
+    }
+
+    return false;
+  };
+
+  const setupLoginForm = () => {
+    const loginForm = document.getElementById("loginForm");
+    if (!loginForm) return;
+
+    loginForm.addEventListener("submit", async (event) => {
       event.preventDefault();
-      const target = form.dataset.demoForm;
-      if (target) {
-        window.location.href = target;
-      } else {
-        alert("The form does not submit to a database yet.");
+
+      const userId = document.getElementById("userId")?.value.trim();
+      const password = document.getElementById("password")?.value.trim();
+      const role = document.getElementById("role")?.value;
+
+      if (!userId || !password || !role) {
+        alert("Please enter a user ID, password, and role.");
+        return;
+      }
+
+      try {
+        const res = await fetch("../PHP/login_api.php", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          credentials: "same-origin",
+          body: JSON.stringify({ userId, password, role })
+        });
+
+        const result = await res.json();
+
+        if (!res.ok) {
+          throw new Error(result.error || "Login failed");
+        }
+
+        window.location.href = getRoleHome(result.role);
+      } catch (err) {
+        console.error("Login error:", err);
+        alert(err.message);
       }
     });
-  });
+  };
 
+  const setupLogout = () => {
+    document.querySelectorAll('.user-chip a[href="index.html"]').forEach((link) => {
+      link.addEventListener("click", async (event) => {
+        event.preventDefault();
+
+        try {
+          await fetch("../PHP/logout_api.php", {
+            method: "POST",
+            credentials: "same-origin"
+          });
+        } catch (err) {
+          console.error("Logout error:", err);
+        }
+
+        window.location.href = "index.html";
+      });
+    });
+  };
+
+  setupLoginForm();
+
+  if (await handleAccessControl()) return;
+
+  const session = await getSession();
+  updateUserChip(session);
+  updateNavForRole(session);
+  setupLogout();
 
 
 
   // --------------
   // TABLE LOADING SECTIONS: fetch data from PHP endpoints and populate the tables
-  
+
   // load doctors into the doctor table (doctor_api)
   fetch("../PHP/doctor_api.php")
     .then((res) => res.json())
@@ -387,8 +561,8 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
       if (el) el.innerHTML = html;
     })
     .catch((err) => console.error("Room load error:", err));
-  
-  
+
+
   // ADMIT PATIENT FORM
   const admitForm = document.getElementById("admitForm");
   if (admitForm) {
@@ -723,7 +897,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
       }
     });
   }
-  
+
   // ------------------
   // DOCTOR ADD AND EDIT FORM: load department dropdown and then rooms based on chosen department
   const patientDeptSelect = document.getElementById("patientDept");
