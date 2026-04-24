@@ -1,7 +1,7 @@
 <?php
 header('Content-Type: application/json');
 
-$conn = new mysqli("localhost", "oluo", "vz9Kh6Qj", "oluo_1");
+require_once "db_connect.php";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
 

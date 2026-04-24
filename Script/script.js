@@ -12,8 +12,8 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
   };
 
   // prevent unsafe HTML from being inserted into tables
-  const escpaeHtml = (value) => {
-    if (value == nil || value == undefined) return "";
+  const escapeHtml = (value) => {
+    if (value === null || value === undefined) return "";
     return String(value)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
@@ -55,7 +55,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
     if (!select) return;
 
     try {
-      const departments = await fetchJSON("department_api.php");
+      const departments = await fetchJSON("../PHP/department_api.php");
       select.innerHTML = `<option value="">Select department</option>`;
 
       departments.forEach((d) => {
@@ -85,7 +85,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
     }
 
     try {
-      const rooms = await fetchJSON("room_api.php");
+      const rooms = await fetchJSON("../PHP/room_api.php");
       const filtered = rooms.filter((r) => {
         const sameDepartment = r.department_id === departmentId;
         const hasCapacity = Number(r.occupied) < Number(r.beds_count);
@@ -235,7 +235,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
   // TABLE LOADING SECTIONS: fetch data from PHP endpoints and populate the tables
   
   // load doctors into the doctor table (doctor_api)
-  fetch("PHP/doctor_api.php")
+  fetch("../PHP/doctor_api.php")
     .then((res) => res.json())
     .then((data) => {
       let html = "";
@@ -263,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
     .catch((err) => console.error("Doctor load error:", err));
 
   // load nurses into the nurse table (nurse_api)
-  fetch("PHP/nurse_api.php")
+  fetch("../PHP/nurse_api.php")
     .then((res) => res.json())
     .then((data) => {
       let html = "";
@@ -291,7 +291,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
     .catch((err) => console.error("Nurse load error:", err));
 
   // load patients into the patient table (patient_api)
-  fetch("PHP/patient_api.php")
+  fetch("../PHP/patient_api.php")
     .then((res) => res.json())
     .then((data) => {
       let html = "";
@@ -327,7 +327,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
     .catch((err) => console.error("Patient load error:", err));
 
   // load departments into the department table (department_api)
-  fetch("PHP/department_api.php")
+  fetch("../PHP/department_api.php")
     .then((res) => res.json())
     .then((data) => {
       let html = "";
@@ -355,7 +355,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
     .catch((err) => console.error("Department load error:", err));
 
   // load rooms into the room table (room_api)
-  fetch("PHP/room_api.php")
+  fetch("../PHP/room_api.php")
     .then((res) => res.json())
     .then((data) => {
       let html = "";
@@ -424,7 +424,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
       }
 
       try {
-        const res = await fetch("PHP/patientadmit_api.php", {
+        const res = await fetch("../PHP/patientadmit_api.php", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -455,7 +455,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
     // If doctor_id exists in the URL, this page is in edit mode.
     // Load all doctors, find the matching one, and prefill the form.
     if (doctorIdParam) {
-      fetchJSON("doctor_api.php")
+      fetchJSON("../PHP/doctor_api.php")
         .then((data) => {
           const doctor = data.find((d) => d.doctor_id === doctorIdParam);
           if (!doctor) return;
@@ -499,7 +499,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
       }
 
       try {
-        const res = await fetch("PHP/doctoradd_api.php", {
+        const res = await fetch("../PHP/doctoradd_api.php", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -528,7 +528,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
     const nurseIdParam = params.get("nurse_id");
 
     if (nurseIdParam) {
-      fetchJSON("nurse_api.php")
+      fetchJSON("../PHP/nurse_api.php")
         .then((data) => {
           const nurse = data.find((n) => n.nurse_id === nurseIdParam);
           if (!nurse) return;
@@ -572,7 +572,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
       }
 
       try {
-        const res = await fetch("PHP/nurseadd_api.php", {
+        const res = await fetch("../PHP/nurseadd_api.php", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -601,7 +601,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
     const departmentIdParam = params.get("department_id");
 
     if (departmentIdParam) {
-      fetchJSON("department_api.php")
+      fetchJSON("../PHP/department_api.php")
         .then((data) => {
           const department = data.find((d) => d.department_id === departmentIdParam);
           if (!department) return;
@@ -636,7 +636,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
       }
 
       try {
-        const res = await fetch("PHP/departmentadd_api.php", {
+        const res = await fetch("../PHP/departmentadd_api.php", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -665,7 +665,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
     const roomNumParam = params.get("room_num");
 
     if (roomNumParam) {
-      fetchJSON("room_api.php")
+      fetchJSON("../PHP/room_api.php")
         .then((data) => {
           const room = data.find((r) => r.room_num === roomNumParam);
           if (!room) return;
@@ -701,7 +701,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
       }
 
       try {
-        const res = await fetch("PHP/roomadd_api.php", {
+        const res = await fetch("../PHP/roomadd_api.php", {
           method: "POST",
           headers: {
             "Content-Type": "application/json"
@@ -759,7 +759,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
       }
 
       try {
-        const patients = await fetchJSON("patient_api.php");
+        const patients = await fetchJSON("../PHP/patient_api.php");
         const patient = patients.find((p) => String(p.patient_id) === String(patientIdParam));
 
         if (!patient) {
@@ -832,7 +832,7 @@ document.addEventListener("DOMContentLoaded", () => { // read query parameters f
         }
 
         try {
-          const res = await fetch("PHP/patientupdate_api.php", {
+          const res = await fetch("../PHP/patientupdate_api.php", {
             method: "POST",
             headers: {
               "Content-Type": "application/json"

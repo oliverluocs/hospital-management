@@ -1,5 +1,5 @@
 <?php
-$conn = new mysqli("localhost", "oluo", "vz9Kh6Qj", "oluo_1");
+require_once "db_connect.php";
 
 $result = $conn->query("SELECT * FROM NURSE");
 

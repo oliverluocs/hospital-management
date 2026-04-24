@@ -4,7 +4,7 @@ header("Content-Type: application/json");
 error_reporting(0);
 ini_set('display_errors', 0);
 
-$conn = new mysqli("localhost", "oluo", "vz9Kh6Qj", "oluo_1");
+require_once "db_connect.php";
 
 if ($conn->connect_error) {
     http_response_code(500);
