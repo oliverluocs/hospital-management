@@ -1,0 +1,35 @@
+Task C: SQL Database Implementation
+
+This task contains the SQL schema and sample data for the Hospital Management Database project.
+
+Relevant folder:
+- SQL/
+
+Files included:
+- create.sql: Creates the database tables
+- load.sql: Loads sample CSV data into the tables
+- department.csv
+- doctor.csv
+- nurse.csv
+- room.csv
+- patient.csv
+- is_treating.csv
+
+Relations included:
+- DEPARTMENT
+- DOCTOR
+- NURSE
+- ROOM
+- PATIENT
+- IS_TREATING
+- APP_USER
+
+How to load the database:
+1. Create and select a MySQL database.
+2. In the terminal, go into the SQL folder.
+3. Start MySQL with local infile enabled:
+   mysql --local-infile=1 --load-data-local-dir="$PWD" -u USERNAME -p
+4. Run:
+   SOURCE create.sql
+5. Run:
+   SOURCE load.sql

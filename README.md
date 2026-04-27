@@ -16,10 +16,3 @@ SOURCE load.sql
 Go to browser: 
 * If betaweb: "https://betaweb.csug.rochester.edu/~oluo/"
 * If localhost: "http://localhost:8000/index.html"
-
-
-### Project Organization:
-* Task B: Folders "Pages/", "Script/", "Style/", "PHP/"
-* Task C: Folder "SQL/" - includes create.sql, load.sql, and .csv files. 
-* Task D: "Task_D.txt"
-* 

@@ -1,0 +1,22 @@
+Task B: Web Interface
+
+This task contains the web interface for the Hospital Management Database project.
+
+Relevant folders:
+- Pages/: HTML pages for login, dashboards, data views, and detail pages
+- Script/: JavaScript files for frontend behavior and API calls
+- Style/: CSS files for styling the website
+- PHP/: PHP backend endpoint files that connect the frontend to the MySQL database
+
+How to run locally:
+1. Open the project folder in the terminal.
+2. Start the PHP server:
+   php -S localhost:8000
+3. Open the site in a browser:
+   http://localhost:8000/index.html
+
+If using betaweb, open:
+https://betaweb.csug.rochester.edu/~oluo/
+
+Login information:
+The web app includes role-based login for Admin, Doctor, and Nurse users. Test login credentials are listed in available_users.txt
