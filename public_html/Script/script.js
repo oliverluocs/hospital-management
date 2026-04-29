@@ -457,161 +457,462 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
   await loadAdminDashboard();
 
   // --------------
-  // TABLE LOADING SECTIONS: fetch data from PHP endpoints and populate the tables
+  // TABLE LOADING SECTIONS WITH SEARCH/FILTERS
 
-  // load doctors into the doctor table (doctor_api)
-  fetch(apiPath("doctor_api.php"))
-    .then((res) => res.json())
-    .then((data) => {
-      let html = "";
+  // small helper for search matching
+  const includesText = (value, search) => {
+    return String(value ?? "")
+      .toLowerCase()
+      .includes(String(search ?? "").trim().toLowerCase());
+  };
 
-      data.forEach((d) => {
-        const onShift = d.is_on_shift === "1" ? "Yes" : "No";
+  // fills search dropdowns with real department IDs from the database
+  const loadDepartmentSearchOptions = async (selectId) => {
+    const select = document.getElementById(selectId);
+    if (!select) return;
 
-        html += `
-          <tr>
-            <td>${escapeHtml(d.first_name)}</td>
-            <td>${escapeHtml(d.last_name)}</td>
-            <td>${escapeHtml(d.doctor_id)}</td>
-            <td>${escapeHtml(d.department_id)}</td>
-            <td>${escapeHtml(d.shift_start)}</td>
-            <td>${escapeHtml(d.shift_end)}</td>
-            <td>${onShift}</td>
-            <td><a class="btn btn-outline" href="add_doctor.html?doctor_id=${encodeURIComponent(d.doctor_id)}">Edit</a></td>
-          </tr>
-        `;
+    try {
+      const departments = await fetchJSON(apiPath("department_api.php"));
+
+      select.innerHTML = `<option value="">All departments</option>`;
+
+      departments.forEach((d) => {
+        const opt = document.createElement("option");
+        opt.value = d.department_id;
+        opt.textContent = `${d.department_id} • ${d.department_name}`;
+        select.appendChild(opt);
       });
+    } catch (err) {
+      console.error("Department search dropdown load error:", err);
+    }
+  };
 
-      const el = document.getElementById("doctorTable");
-      if (el) el.innerHTML = html;
-    })
-    .catch((err) => console.error("Doctor load error:", err));
+  // load search department dropdowns if they exist on the current page
+  await loadDepartmentSearchOptions("lookupDepartment");
+  await loadDepartmentSearchOptions("staffDept");
+  await loadDepartmentSearchOptions("roomDeptSearch");
 
-  // load nurses into the nurse table (nurse_api)
-  fetch(apiPath("nurse_api.php"))
-    .then((res) => res.json())
-    .then((data) => {
-      let html = "";
+  // ------------------
+  // DOCTOR TABLE WITH FILTERS
 
-      data.forEach((n) => {
-        const onShift = n.is_on_shift === "1" ? "Yes" : "No";
+  const doctorTable = document.getElementById("doctorTable");
+  let allDoctors = [];
 
-        html += `
-          <tr>
-            <td>${escapeHtml(n.first_name)}</td>
-            <td>${escapeHtml(n.last_name)}</td>
-            <td>${escapeHtml(n.nurse_id)}</td>
-            <td>${escapeHtml(n.department_id)}</td>
-            <td>${escapeHtml(n.shift_start)}</td>
-            <td>${escapeHtml(n.shift_end)}</td>
-            <td>${onShift}</td>
-            <td><a class="btn btn-outline" href="add_nurse.html?nurse_id=${encodeURIComponent(n.nurse_id)}">Edit</a></td>
-          </tr>
-        `;
-      });
+  const renderDoctors = (doctors) => {
+    if (!doctorTable) return;
 
-      const el = document.getElementById("nurseTable");
-      if (el) el.innerHTML = html;
-    })
-    .catch((err) => console.error("Nurse load error:", err));
+    let html = "";
 
-  // load patients into the patient table (patient_api)
-  fetch(apiPath("patient_api.php"))
-    .then((res) => res.json())
-    .then((data) => {
-      let html = "";
+    doctors.forEach((d) => {
+      const onShift = d.is_on_shift === "1" || d.is_on_shift === 1 ? "Yes" : "No";
 
-      data.forEach((p) => {
-        const statusClass = badgeClassForStatus(p.status);
+      html += `
+        <tr>
+          <td>${escapeHtml(d.first_name)}</td>
+          <td>${escapeHtml(d.last_name)}</td>
+          <td>${escapeHtml(d.doctor_id)}</td>
+          <td>${escapeHtml(d.department_id)}</td>
+          <td>${escapeHtml(d.shift_start)}</td>
+          <td>${escapeHtml(d.shift_end)}</td>
+          <td>${onShift}</td>
+          <td>
+            <a class="btn btn-outline" href="add_doctor.html?doctor_id=${encodeURIComponent(d.doctor_id)}">
+              Edit
+            </a>
+          </td>
+        </tr>
+      `;
+    });
 
-        html += `
-          <tr>
-            <td>${escapeHtml(p.patient_id)}</td>
-            <td>${escapeHtml(p.first_name)} ${escapeHtml(p.last_name)}</td>
-            <td>${escapeHtml(p.department_id)}</td>
-            <td>${escapeHtml(p.room_num)}</td>
-            <td>${escapeHtml(p.illness)}</td>
-            <td>
-              <span class="badge ${statusClass}">
-                ${escapeHtml(p.status)}
-              </span>
-            </td>
-            <td>${escapeHtml(p.time_admitted)}</td>
-            <td>
-              <a class="btn btn-outline" href="patient_details.html?patient_id=${encodeURIComponent(p.patient_id)}">
-                View
-              </a>
-            </td>
-          </tr>
-        `;
-      });
+    doctorTable.innerHTML = html || `
+      <tr>
+        <td colspan="8">No doctors found.</td>
+      </tr>
+    `;
+  };
 
-      const el = document.getElementById("patientTable");
-      if (el) el.innerHTML = html;
-    })
-    .catch((err) => console.error("Patient load error:", err));
+  const applyStaffFilters = () => {
+    const first = document.getElementById("staffFirst")?.value || "";
+    const last = document.getElementById("staffLast")?.value || "";
+    const dept = document.getElementById("staffDept")?.value || "";
 
-  // load departments into the department table (department_api)
-  fetch(apiPath("department_api.php"))
-    .then((res) => res.json())
-    .then((data) => {
-      let html = "";
+    const filteredDoctors = allDoctors.filter((d) => {
+      return (
+        includesText(d.first_name, first) &&
+        includesText(d.last_name, last) &&
+        (!dept || d.department_id === dept)
+      );
+    });
 
-      data.forEach((d) => {
-        html += `
-          <tr>
-            <td>${escapeHtml(d.department_id)}</td>
-            <td>${escapeHtml(d.department_name)}</td>
-            <td>${escapeHtml(d.department_location)}</td>
-            <td>${escapeHtml(d.beds_total)}</td>
-            <td>${escapeHtml(d.patient_count)}</td>
-            <td>
-              <a class="btn btn-outline" href="add_department.html?department_id=${encodeURIComponent(d.department_id)}">
-                Edit
-              </a>
-            </td>
-          </tr>
-        `;
-      });
+    const filteredNurses = allNurses.filter((n) => {
+      return (
+        includesText(n.first_name, first) &&
+        includesText(n.last_name, last) &&
+        (!dept || n.department_id === dept)
+      );
+    });
 
-      const el = document.getElementById("deptTable");
-      if (el) el.innerHTML = html;
-    })
-    .catch((err) => console.error("Department load error:", err));
+    renderDoctors(filteredDoctors);
+    renderNurses(filteredNurses);
+  };
 
-  // load rooms into the room table (room_api)
-  fetch(apiPath("room_api.php"))
-    .then((res) => res.json())
-    .then((data) => {
-      let html = "";
+  if (doctorTable) {
+    fetch(apiPath("doctor_api.php"))
+      .then((res) => res.json())
+      .then((data) => {
+        allDoctors = data;
+        applyStaffFilters();
+      })
+      .catch((err) => console.error("Doctor load error:", err));
+  }
 
-      data.forEach((r) => {
-        const beds = Number(r.beds_count) || 0;
-        const occupied = Number(r.occupied) || 0;
-        const status = occupied === beds ? "Full" : occupied === 0 ? "Empty" : "Partial";
+  // ------------------
+  // NURSE TABLE WITH FILTERS
 
-        html += `
-          <tr>
-            <td>${escapeHtml(r.room_num)}</td>
-            <td>${escapeHtml(r.department_id)}</td>
-            <td>${escapeHtml(r.room_type)}</td>
-            <td>${status}</td>
-            <td>${beds}</td>
-            <td>${occupied}</td>
-            <td>${escapeHtml(r.last_cleaned ?? "-")}</td>
-            <td>
-              <a class="btn btn-outline" href="add_room.html?room_num=${encodeURIComponent(r.room_num)}">
-                Edit
-              </a>
-            </td>
-          </tr>
-        `;
-      });
+  const nurseTable = document.getElementById("nurseTable");
+  let allNurses = [];
 
-      const el = document.getElementById("roomTable");
-      if (el) el.innerHTML = html;
-    })
-    .catch((err) => console.error("Room load error:", err));
+  const renderNurses = (nurses) => {
+    if (!nurseTable) return;
+
+    let html = "";
+
+    nurses.forEach((n) => {
+      const onShift = n.is_on_shift === "1" || n.is_on_shift === 1 ? "Yes" : "No";
+
+      html += `
+        <tr>
+          <td>${escapeHtml(n.first_name)}</td>
+          <td>${escapeHtml(n.last_name)}</td>
+          <td>${escapeHtml(n.nurse_id)}</td>
+          <td>${escapeHtml(n.department_id)}</td>
+          <td>${escapeHtml(n.shift_start)}</td>
+          <td>${escapeHtml(n.shift_end)}</td>
+          <td>${onShift}</td>
+          <td>
+            <a class="btn btn-outline" href="add_nurse.html?nurse_id=${encodeURIComponent(n.nurse_id)}">
+              Edit
+            </a>
+          </td>
+        </tr>
+      `;
+    });
+
+    nurseTable.innerHTML = html || `
+      <tr>
+        <td colspan="8">No nurses found.</td>
+      </tr>
+    `;
+  };
+
+  if (nurseTable) {
+    fetch(apiPath("nurse_api.php"))
+      .then((res) => res.json())
+      .then((data) => {
+        allNurses = data;
+        applyStaffFilters();
+      })
+      .catch((err) => console.error("Nurse load error:", err));
+  }
+
+  // staff filter event listeners
+  ["staffFirst", "staffLast", "staffDept"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.addEventListener("input", applyStaffFilters);
+    el.addEventListener("change", applyStaffFilters);
+  });
+
+  const staffSearchBtn = document
+    .getElementById("staffFirst")
+    ?.closest(".search-grid")
+    ?.querySelector('button[type="button"]');
+
+  if (staffSearchBtn) {
+    staffSearchBtn.addEventListener("click", applyStaffFilters);
+  }
+
+  // ------------------
+  // PATIENT TABLE WITH FILTERS
+
+  const patientTable = document.getElementById("patientTable");
+  let allPatients = [];
+
+  const renderPatients = (patients) => {
+    if (!patientTable) return;
+
+    let html = "";
+
+    patients.forEach((p) => {
+      const statusClass = badgeClassForStatus(p.status);
+
+      html += `
+        <tr>
+          <td>${escapeHtml(p.patient_id)}</td>
+          <td>${escapeHtml(p.first_name)} ${escapeHtml(p.last_name)}</td>
+          <td>${escapeHtml(p.department_id)}</td>
+          <td>${escapeHtml(p.room_num)}</td>
+          <td>${escapeHtml(p.illness)}</td>
+          <td>
+            <span class="badge ${statusClass}">
+              ${escapeHtml(p.status)}
+            </span>
+          </td>
+          <td>${escapeHtml(p.time_admitted)}</td>
+          <td>
+            <a class="btn btn-outline" href="patient_details.html?patient_id=${encodeURIComponent(p.patient_id)}">
+              View
+            </a>
+          </td>
+        </tr>
+      `;
+    });
+
+    patientTable.innerHTML = html || `
+      <tr>
+        <td colspan="8">No patients found.</td>
+      </tr>
+    `;
+  };
+
+  const applyPatientFilters = () => {
+    const first = document.getElementById("lookupFirst")?.value || "";
+    const last = document.getElementById("lookupLast")?.value || "";
+    const dept = document.getElementById("lookupDepartment")?.value || "";
+    const patientId = document.getElementById("lookupPatientId")?.value || "";
+    const room = document.getElementById("lookupRoom")?.value || "";
+    const contact = document.getElementById("lookupContact")?.value || "";
+    const illness = document.getElementById("lookupIllness")?.value || "";
+
+    const filtered = allPatients.filter((p) => {
+      return (
+        includesText(p.first_name, first) &&
+        includesText(p.last_name, last) &&
+        (!dept || p.department_id === dept) &&
+        includesText(p.patient_id, patientId) &&
+        includesText(p.room_num, room) &&
+        includesText(p.contact_info, contact) &&
+        includesText(p.illness, illness)
+      );
+    });
+
+    renderPatients(filtered);
+  };
+
+  if (patientTable) {
+    fetch(apiPath("patient_api.php"))
+      .then((res) => res.json())
+      .then((data) => {
+        allPatients = data;
+        applyPatientFilters();
+      })
+      .catch((err) => console.error("Patient load error:", err));
+  }
+
+  [
+    "lookupFirst",
+    "lookupLast",
+    "lookupDepartment",
+    "lookupPatientId",
+    "lookupRoom",
+    "lookupContact",
+    "lookupIllness"
+  ].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.addEventListener("input", applyPatientFilters);
+    el.addEventListener("change", applyPatientFilters);
+  });
+
+  const patientSearchBtn = document
+    .getElementById("lookupFirst")
+    ?.closest(".search-grid")
+    ?.querySelector('button[type="button"]');
+
+  if (patientSearchBtn) {
+    patientSearchBtn.addEventListener("click", applyPatientFilters);
+  }
+
+  // ------------------
+  // DEPARTMENT TABLE WITH FILTERS
+
+  const deptTable = document.getElementById("deptTable");
+  let allDepartments = [];
+
+  const renderDepartments = (departments) => {
+    if (!deptTable) return;
+
+    let html = "";
+
+    departments.forEach((d) => {
+      html += `
+        <tr>
+          <td>${escapeHtml(d.department_id)}</td>
+          <td>${escapeHtml(d.department_name)}</td>
+          <td>${escapeHtml(d.department_location)}</td>
+          <td>${escapeHtml(d.beds_total)}</td>
+          <td>${escapeHtml(d.patient_count)}</td>
+          <td>
+            <a class="btn btn-outline" href="add_department.html?department_id=${encodeURIComponent(d.department_id)}">
+              Edit
+            </a>
+          </td>
+        </tr>
+      `;
+    });
+
+    deptTable.innerHTML = html || `
+      <tr>
+        <td colspan="6">No departments found.</td>
+      </tr>
+    `;
+  };
+
+  const applyDepartmentFilters = () => {
+    const id = document.getElementById("deptIdSearch")?.value || "";
+    const name = document.getElementById("deptNameSearch")?.value || "";
+    const location = document.getElementById("deptLocationSearch")?.value || "";
+
+    const filtered = allDepartments.filter((d) => {
+      return (
+        includesText(d.department_id, id) &&
+        includesText(d.department_name, name) &&
+        includesText(d.department_location, location)
+      );
+    });
+
+    renderDepartments(filtered);
+  };
+
+  if (deptTable) {
+    fetch(apiPath("department_api.php"))
+      .then((res) => res.json())
+      .then((data) => {
+        allDepartments = data;
+        applyDepartmentFilters();
+      })
+      .catch((err) => console.error("Department load error:", err));
+  }
+
+  ["deptIdSearch", "deptNameSearch", "deptLocationSearch"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.addEventListener("input", applyDepartmentFilters);
+    el.addEventListener("change", applyDepartmentFilters);
+  });
+
+  const deptSearchBtn = document
+    .getElementById("deptIdSearch")
+    ?.closest(".search-grid")
+    ?.querySelector('button[type="button"]');
+
+  if (deptSearchBtn) {
+    deptSearchBtn.addEventListener("click", applyDepartmentFilters);
+  }
+
+  // ------------------
+  // ROOM TABLE WITH FILTERS
+
+  const roomTable = document.getElementById("roomTable");
+  let allRooms = [];
+
+  const getRoomStatus = (room) => {
+    const beds = Number(room.beds_count) || 0;
+    const occupied = Number(room.occupied) || 0;
+
+    if (beds > 0 && occupied >= beds) return "Full";
+    if (occupied === 0) return "Empty";
+    return "Partial";
+  };
+
+  const renderRooms = (rooms) => {
+    if (!roomTable) return;
+
+    let html = "";
+
+    rooms.forEach((r) => {
+      const beds = Number(r.beds_count) || 0;
+      const occupied = Number(r.occupied) || 0;
+      const status = getRoomStatus(r);
+
+      html += `
+        <tr>
+          <td>${escapeHtml(r.room_num)}</td>
+          <td>${escapeHtml(r.department_id)}</td>
+          <td>${escapeHtml(r.room_type)}</td>
+          <td>${status}</td>
+          <td>${beds}</td>
+          <td>${occupied}</td>
+          <td>${escapeHtml(r.last_cleaned ?? "-")}</td>
+          <td>
+            <a class="btn btn-outline" href="add_room.html?room_num=${encodeURIComponent(r.room_num)}">
+              Edit
+            </a>
+          </td>
+        </tr>
+      `;
+    });
+
+    roomTable.innerHTML = html || `
+      <tr>
+        <td colspan="8">No rooms found.</td>
+      </tr>
+    `;
+  };
+
+  const applyRoomFilters = () => {
+    const roomNum = document.getElementById("roomNumSearch")?.value || "";
+    const dept = document.getElementById("roomDeptSearch")?.value || "";
+    const filled = document.getElementById("roomFilledSearch")?.value || "";
+
+    const filtered = allRooms.filter((r) => {
+      const beds = Number(r.beds_count) || 0;
+      const occupied = Number(r.occupied) || 0;
+      const isFull = beds > 0 && occupied >= beds;
+
+      return (
+        includesText(r.room_num, roomNum) &&
+        (!dept || r.department_id === dept) &&
+        (
+          !filled ||
+          (filled === "Yes" && isFull) ||
+          (filled === "No" && !isFull)
+        )
+      );
+    });
+
+    renderRooms(filtered);
+  };
+
+  if (roomTable) {
+    fetch(apiPath("room_api.php"))
+      .then((res) => res.json())
+      .then((data) => {
+        allRooms = data;
+        applyRoomFilters();
+      })
+      .catch((err) => console.error("Room load error:", err));
+  }
+
+  ["roomNumSearch", "roomDeptSearch", "roomFilledSearch"].forEach((id) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    el.addEventListener("input", applyRoomFilters);
+    el.addEventListener("change", applyRoomFilters);
+  });
+
+  const roomSearchBtn = document
+    .getElementById("roomNumSearch")
+    ?.closest(".search-grid")
+    ?.querySelector('button[type="button"]');
+
+  if (roomSearchBtn) {
+    roomSearchBtn.addEventListener("click", applyRoomFilters);
+  }
 
 
   // ADMIT PATIENT FORM
