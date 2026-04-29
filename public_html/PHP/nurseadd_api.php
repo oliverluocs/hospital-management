@@ -17,6 +17,25 @@ if (!$data) {
     exit;
 }
 
+$mode = $data["mode"] ?? "add";
+
+if ($mode === "add") {
+    $check = $conn->prepare("SELECT nurse_id FROM NURSE WHERE nurse_id = ?");
+    $check->bind_param("s", $data["nurse_id"]);
+    $check->execute();
+    $result = $check->get_result();
+
+    if ($result && $result->num_rows > 0) {
+        http_response_code(409);
+        echo json_encode([
+            "error" => "Nurse ID already exists. Use the Edit button if you want to update this nurse."
+        ]);
+        exit;
+    }
+
+    $check->close();
+}
+
 $stmt = $conn->prepare("
     INSERT INTO NURSE
     (nurse_id, department_id, first_name, last_name, contact_num,

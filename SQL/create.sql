@@ -69,7 +69,7 @@ CREATE TABLE PATIENT (
     first_name VARCHAR(20),
     last_name VARCHAR(20),
     contact_info VARCHAR(20),
-    gender VARCHAR(10),
+    gender VARCHAR(20),
     DOB DATETIME,
     illness VARCHAR(100),
     time_admitted DATETIME,

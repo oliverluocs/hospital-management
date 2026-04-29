@@ -8,11 +8,6 @@ Leanna Fowler
 Oliver Luo  
 
 
-How to run:
-php -S localhost:8000
-mysql --local-infile=1 --load-data-local-dir="$PWD" -u USERNAME -p
-SOURCE load.sql
-
 Go to browser: 
-* If betaweb: "https://betaweb.csug.rochester.edu/~oluo/"
-* If localhost: "http://localhost:8000/index.html"
+* Betaweb: "https://betaweb.csug.rochester.edu/~oluo/"
+  * **IMPORTANT**: MAKE SURE IN db_connect.php, the $conn is with oluo!!!

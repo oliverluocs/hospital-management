@@ -20,6 +20,25 @@ if (!$data) {
     exit;
 }
 
+$mode = $data["mode"] ?? "add";
+
+if ($mode === "add") {
+    $check = $conn->prepare("SELECT department_id FROM DEPARTMENT WHERE department_id = ?");
+    $check->bind_param("s", $data["department_id"]);
+    $check->execute();
+    $result = $check->get_result();
+
+    if ($result && $result->num_rows > 0) {
+        http_response_code(409);
+        echo json_encode([
+            "error" => "Department ID already exists. Use the Edit button if you want to update this department."
+        ]);
+        exit;
+    }
+
+    $check->close();
+}
+
 $stmt = $conn->prepare("
     INSERT INTO DEPARTMENT
     (department_id, department_name, department_location, beds_total)

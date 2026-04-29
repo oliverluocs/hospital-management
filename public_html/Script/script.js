@@ -9,12 +9,32 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
   const params = new URLSearchParams(window.location.search);
 
   // helper to fetch JSON from a PHP endpoint
-  const fetchJSON = async (url) => {
-    const res = await fetch(url);
-    if (!res.ok) {
-      throw new Error(`request failed for ${url}`);
+  // wraps the native fetch API with error handling for non-JSON responses and HTTP errors
+  const fetchJSON = async (url, options = {}) => {
+    // make the HTTP request (defaults to GET if options.method is not specified)
+    const res = await fetch(url, options);
+    // get the response as raw text (need to check if it's JSON first)
+    const text = await res.text();
+
+    let data;
+
+    // try to parse the text as JSON
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      // if parsing fails, the server likely returned an HTML error page or PHP notice
+      console.error(`Non-JSON response from ${url}:`, text);
+      throw new Error(`Server returned HTML/PHP error instead of JSON. Check ${url}.`);
     }
-    return res.json()
+
+    // Check if the HTTP response was successful (status 200-299)
+    // If not, throw an error with the server's error message if available
+    if (!res.ok) {
+      throw new Error(data.error || data.details || `Request failed for ${url}`);
+    }
+
+    // Return the parsed JSON data
+    return data;
   };
 
   // prevent unsafe HTML from being inserted into tables
@@ -221,6 +241,7 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
   // }
 
   // LOGIN FORM BEHAVIOUR
+
   const ROLE_HOME = {
     Admin: "admin_dashboard.html",
     Doctor: "patient_lookup.html",
@@ -466,6 +487,58 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
       .includes(String(search ?? "").trim().toLowerCase());
   };
 
+  const isAdmin = session?.role === "Admin";
+
+  // function that creates a Delete button HTML string
+  const adminDeleteButton = (type, id, label) => {
+    if (!isAdmin) return "";
+
+    return `
+    <button 
+      class="btn btn-outline"
+      type="button"
+      data-delete-type="${escapeHtml(type)}"
+      data-delete-id="${escapeHtml(id)}"
+      data-delete-label="${escapeHtml(label)}"
+    >
+      Delete
+    </button>
+  `;
+  };
+
+  // click handler for delete buttons
+  document.addEventListener("click", async (event) => {
+    const btn = event.target.closest("[data-delete-type]");
+    if (!btn) return;
+
+    // extract data
+    const type = btn.dataset.deleteType;
+    const id = btn.dataset.deleteId;
+    const label = btn.dataset.deleteLabel;
+
+    const confirmed = confirm(`Are you sure you want to delete ${label}?`);
+
+    if (!confirmed) return;
+
+    // DELETE request: Send POST to delete_api.php with type and id in the request body
+    try {
+      const result = await fetchJSON(apiPath("delete_api.php"), {
+        method: "POST",  // POST request
+        headers: {
+          "Content-Type": "application/json"
+        },
+        credentials: "same-origin",
+        body: JSON.stringify({ type, id })  // data sent in request body, not URL
+      });
+
+      alert(result.message || "Deleted successfully.");
+      window.location.reload();
+    } catch (err) {
+      console.error("Delete error:", err);
+      alert(err.message);
+    }
+  });
+
   // fills search dropdowns with real department IDs from the database
   const loadDepartmentSearchOptions = async (selectId) => {
     const select = document.getElementById(selectId);
@@ -519,6 +592,7 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
             <a class="btn btn-outline" href="add_doctor.html?doctor_id=${encodeURIComponent(d.doctor_id)}">
               Edit
             </a>
+            ${adminDeleteButton("doctor", d.doctor_id, `doctor ${d.first_name} ${d.last_name}`)}
           </td>
         </tr>
       `;
@@ -593,6 +667,7 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
             <a class="btn btn-outline" href="add_nurse.html?nurse_id=${encodeURIComponent(n.nurse_id)}">
               Edit
             </a>
+            ${adminDeleteButton("nurse", n.nurse_id, `nurse ${n.first_name} ${n.last_name}`)}
           </td>
         </tr>
       `;
@@ -664,6 +739,7 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
             <a class="btn btn-outline" href="patient_details.html?patient_id=${encodeURIComponent(p.patient_id)}">
               View
             </a>
+            ${adminDeleteButton("patient", p.patient_id, `patient ${p.first_name} ${p.last_name}`)}
           </td>
         </tr>
       `;
@@ -758,6 +834,7 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
             <a class="btn btn-outline" href="add_department.html?department_id=${encodeURIComponent(d.department_id)}">
               Edit
             </a>
+            ${adminDeleteButton("department", d.department_id, `department ${d.department_name}`)}
           </td>
         </tr>
       `;
@@ -851,6 +928,7 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
             <a class="btn btn-outline" href="add_room.html?room_num=${encodeURIComponent(r.room_num)}">
               Edit
             </a>
+            ${adminDeleteButton("room", r.room_num, `room ${r.room_num}`)}
           </td>
         </tr>
       `;
@@ -1004,6 +1082,7 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
       e.preventDefault();
 
       const doctor = {
+        mode: doctorIdParam ? "edit" : "add",
         doctor_id: document.getElementById("doctorId").value,
         license_num: document.getElementById("doctorLicense").value,
         first_name: document.getElementById("doctorFirst").value,
@@ -1077,6 +1156,7 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
       e.preventDefault();
 
       const nurse = {
+        mode: nurseIdParam ? "edit" : "add",
         nurse_id: document.getElementById("nurseId").value,
         license_num: document.getElementById("nurseLicense").value,
         first_name: document.getElementById("nurseFirst").value,
@@ -1145,6 +1225,7 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
       e.preventDefault();
 
       const department = {
+        mode: departmentIdParam ? "edit" : "add",
         department_id: document.getElementById("deptId").value,
         department_name: document.getElementById("deptName").value,
         department_location: document.getElementById("deptLocation").value,
@@ -1211,6 +1292,7 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
       e.preventDefault();
 
       const room = {
+        mode: roomNumParam ? "edit" : "add",
         room_num: document.getElementById("roomNum").value,
         department_id: document.getElementById("roomDept").value,
         room_type: document.getElementById("roomType").value,

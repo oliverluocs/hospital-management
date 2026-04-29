@@ -21,6 +21,26 @@ if (!$data) {
 }
 
 $conn->begin_transaction();
+
+$mode = $data["mode"] ?? "add";
+
+if ($mode === "add") {
+    $check = $conn->prepare("SELECT room_num FROM ROOM WHERE room_num = ?");
+    $check->bind_param("s", $data["room_num"]);
+    $check->execute();
+    $result = $check->get_result();
+
+    if ($result && $result->num_rows > 0) {
+        http_response_code(409);
+        echo json_encode([
+            "error" => "Room number already exists. Use the Edit button if you want to update this room."
+        ]);
+        exit;
+    }
+
+    $check->close();
+}
+
 try {
     $existing = null;
     $check = $conn->prepare("SELECT department_id, beds_count FROM ROOM WHERE room_num = ?");
