@@ -11,3 +11,10 @@ Oliver Luo
 Go to browser: 
 * Betaweb: "https://betaweb.csug.rochester.edu/~oluo/"
   * **IMPORTANT**: MAKE SURE IN db_connect.php, the $conn is with oluo!!!
+
+Demo Roles Login:
+Admin: **User:** admin01 **Password:** admin261
+Doctor: **User:** D101 **Password:** doctor261
+Doctor: **User:** D102 **Password:** doctor262
+Nurse: **User:** N201 **Password:** nurse261
+Nurse: **User:** N202 **Password:** nurse262
