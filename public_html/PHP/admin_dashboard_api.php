@@ -1,29 +1,38 @@
 <?php
+// set response header to indicate JSON content
 header("Content-Type: application/json");
 
+// include database connection
 require_once "db_connect.php";
 
 try {
     $summary = [];
 
+    // get total patient count
     $result = $conn->query("SELECT COUNT(*) AS total FROM PATIENT");
     $summary["total_patients"] = $result->fetch_assoc()["total"];
 
+    // get total occupied beds
     $result = $conn->query("
         SELECT COALESCE(SUM(occupied), 0) AS total
         FROM ROOM
     ");
     $summary["beds_filled"] = $result->fetch_assoc()["total"];
 
+    // get total available beds
     $result = $conn->query("
         SELECT COALESCE(SUM(beds_count - occupied), 0) AS total
         FROM ROOM
     ");
     $summary["beds_available"] = $result->fetch_assoc()["total"];
 
+    // get total doctor count
     $result = $conn->query("SELECT COUNT(*) AS total FROM DOCTOR");
     $summary["total_doctors"] = $result->fetch_assoc()["total"];
 
+    // query to get per-department stats
+    // left join to include departments with no patients or rooms
+    // ** COALESCE = returns the first non-null value from a provided list of arguments
     $departmentQuery = "
         SELECT 
             d.department_name,
@@ -55,6 +64,7 @@ try {
 
     $departments = [];
 
+    // build department array from query results
     while ($row = $departmentResult->fetch_assoc()) {
         $departments[] = [
             "department_name" => $row["department_name"],
@@ -63,12 +73,14 @@ try {
         ];
     }
 
+    // return success response with summary and department data
     echo json_encode([
         "success" => true,
         "summary" => $summary,
         "departments" => $departments
     ]);
 } catch (Exception $e) {
+    // return error response
     echo json_encode([
         "success" => false,
         "error" => $e->getMessage()

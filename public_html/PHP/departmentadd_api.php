@@ -1,33 +1,42 @@
 <?php
+// set response header to indicate JSON content
 header("Content-Type: application/json");
 
+// disable error display for clean JSON responses
 error_reporting(0);
 ini_set('display_errors', 0);
 
+// include database connection
 require_once "db_connect.php";
 
+// check for connection errors
 if ($conn->connect_error) {
     http_response_code(500);
     echo json_encode(["error" => $conn->connect_error]);
     exit;
 }
 
+// get the request body as JSON
 $data = json_decode(file_get_contents("php://input"), true);
 
+// validate that we got valid JSON
 if (!$data) {
     http_response_code(400);
     echo json_encode(["error" => "Invalid JSON"]);
     exit;
 }
 
+// determine if this is an add or edit operation
 $mode = $data["mode"] ?? "add";
 
+// if adding, check if department_id already exists (check for duplicates)
 if ($mode === "add") {
     $check = $conn->prepare("SELECT department_id FROM DEPARTMENT WHERE department_id = ?");
     $check->bind_param("s", $data["department_id"]);
     $check->execute();
     $result = $check->get_result();
 
+    // if id exists, return conflict error
     if ($result && $result->num_rows > 0) {
         http_response_code(409);
         echo json_encode([
@@ -39,6 +48,8 @@ if ($mode === "add") {
     $check->close();
 }
 
+// prepare the insert or update statement
+// ON DUPLICATE KEY UPDATE allows insert to become an update if the id exists
 $stmt = $conn->prepare("
     INSERT INTO DEPARTMENT
     (department_id, department_name, department_location, beds_total)
@@ -55,6 +66,7 @@ if (!$stmt) {
     exit;
 }
 
+// bind the four parameters: three strings and one integer
 $stmt->bind_param(
     "sssi",
     $data["department_id"],
@@ -63,6 +75,7 @@ $stmt->bind_param(
     $data["beds_total"]
 );
 
+// execute the statement
 if ($stmt->execute()) {
     echo json_encode(["success" => true]);
 } else {

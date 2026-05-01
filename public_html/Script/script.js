@@ -1,11 +1,16 @@
 
-document.addEventListener("DOMContentLoaded", async () => { // read query parameters from the url
+// run when the page loads
+document.addEventListener("DOMContentLoaded", async () => {
+  // determine the API path based on the server
+  // use local PHP folder for localhost, use remote path for betaweb
   const API_BASE = window.location.hostname === "localhost"
     ? "PHP/"
     : "/~oluo/PHP/";
 
+  // helper to build full API URLs
   const apiPath = (fileName) => `${API_BASE}${fileName}`;
 
+  // read query parameters from the URL (e.g., ?doctor_id=D001)
   const params = new URLSearchParams(window.location.search);
 
   // helper to fetch JSON from a PHP endpoint
@@ -37,7 +42,7 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
     return data;
   };
 
-  // prevent unsafe HTML from being inserted into tables
+  // prevent XSS attacks by escaping HTML special characters
   const escapeHtml = (value) => {
     if (value === null || value === undefined) return "";
     return String(value)
@@ -49,25 +54,28 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
   };
 
   // convert a datetime or date string into the form of YYYY-MM-DD
+  // used for HTML date input fields
   const toDateInputValue = (value) => {
     if (!value) return "";
     return String(value).slice(0, 10);
   };
 
-  // convert a datetime string into the form of HH:DD
+  // convert a datetime string into the form of HH:MM
+  // used for HTML time input fields
   const toTimeInputValue = (value) => {
     if (!value) return "";
     const str = String(value);
     return str.length >= 16 ? str.slice(11, 16) : "";
   };
 
-  // to fit into an <input type="datetime-local">, this is to convert say, "2026-04-19 12:30:00" into "2026-04-19T12:30"
+  // convert a datetime string into the form needed for datetime-local input
+  // converts "2026-04-19 12:30:00" to "2026-04-19T12:30"
   const toDatetimeLocalValue = (value) => {
     if (!value) return "";
     return String(value).replace(" ", "T").slice(0, 16);
   };
 
-  // badge colour class to use based on patient status
+  // return the CSS class for a patient status badge
   const badgeClassForStatus = (status) => {
     if (status == "Critical") return "danger";
     if (status == "Stable") return "success";
@@ -75,7 +83,7 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
     return "";
   };
 
-  // load department options into a <select>
+  // fetch departments from the API and populate a dropdown select element
   const loadDepartmentOptions = async (selectId, selectedValue = "") => {
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -98,7 +106,8 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
     }
   };
 
-  // load room options for a specific department
+  // fetch rooms from the API and populate a dropdown
+  // only shows rooms in the selected department that have available beds
   const loadRoomOptionsByDepartment = async (selectId, departmentId, selectedRoom = "") => {
     const select = document.getElementById(selectId);
     if (!select) return;
@@ -242,12 +251,14 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
 
   // LOGIN FORM BEHAVIOUR
 
+  // map each role to the page they should see after logging in
   const ROLE_HOME = {
     Admin: "admin_dashboard.html",
     Doctor: "patient_lookup.html",
     Nurse: "patient_lookup.html"
   };
 
+  // define which roles can access which pages
   const PAGE_ACCESS = {
     "index.html": ["Guest", "Admin", "Doctor", "Nurse"],
     "admin_dashboard.html": ["Admin"],
@@ -258,16 +269,18 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
     "add_room.html": ["Admin"],
     "departments_management.html": ["Admin"],
     "add_department.html": ["Admin"],
-    // "reports.html": ["Admin"],
     "patient_lookup.html": ["Admin", "Doctor", "Nurse"],
     "patient_details.html": ["Admin", "Doctor", "Nurse"],
     "admit_patient.html": ["Admin", "Doctor"]
   };
 
+  // get the current page filename from the URL
   const currentPage = window.location.pathname.split("/").pop() || "index.html";
 
+  // get the redirect page for a given role
   const getRoleHome = (role) => ROLE_HOME[role] || "index.html";
 
+  // check if the user is logged in by calling the session API
   const getSession = async () => {
     try {
       const res = await fetch(apiPath("session_api.php"), {
@@ -307,6 +320,8 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
     if (label) label.textContent = `${session.role} • ${session.userId}`;
   };
 
+  // update the navigation menu based on the user's role
+  // hides links that the user is not allowed to access
   const updateNavForRole = (session) => {
     const role = session?.role || "Guest";
 
@@ -329,14 +344,18 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
     const isAdmin = role === "Admin";
     const isDoctor = role === "Doctor";
 
+    // show admin-only pages
     toggleDisplay(
       'a[href="staff_management.html"], a[href="add_doctor.html"], a[href="add_nurse.html"], a[href="room_management.html"], a[href="add_room.html"], a[href="departments_management.html"], a[href="add_department.html"], a[href="admin_dashboard.html"]',
       isAdmin
     );
 
+    // show admit patient page for admin and doctor
     toggleDisplay('a[href="admit_patient.html"]', isAdmin || isDoctor);
   };
 
+  // check if the user is allowed to access the current page
+  // redirect to appropriate page if not allowed
   const handleAccessControl = async () => {
     const session = await getSession();
 
@@ -362,6 +381,7 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
     return false;
   };
 
+  // set up the login form submission handler
   const setupLoginForm = () => {
     const loginForm = document.getElementById("loginForm");
     if (!loginForm) return;
@@ -402,6 +422,7 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
     });
   };
 
+  // set up the logout link handler
   const setupLogout = () => {
     document.querySelectorAll('.user-chip a[href="index.html"]').forEach((link) => {
       link.addEventListener("click", async (event) => {
@@ -430,6 +451,7 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
   updateNavForRole(session);
   setupLogout();
 
+  // load the admin dashboard data if on that page
   const loadAdminDashboard = async () => {
     const dashboardTable = document.getElementById("departmentStatsBody");
 
@@ -480,16 +502,18 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
   // --------------
   // TABLE LOADING SECTIONS WITH SEARCH/FILTERS
 
-  // small helper for search matching
+  // helper for case-insensitive text search
   const includesText = (value, search) => {
     return String(value ?? "")
       .toLowerCase()
       .includes(String(search ?? "").trim().toLowerCase());
   };
 
+  // check if the current user is an admin
   const isAdmin = session?.role === "Admin";
 
   // function that creates a Delete button HTML string
+  // only renders for admin users
   const adminDeleteButton = (type, id, label) => {
     if (!isAdmin) return "";
 
@@ -507,6 +531,7 @@ document.addEventListener("DOMContentLoaded", async () => { // read query parame
   };
 
   // click handler for delete buttons
+  // uses event delegation on the document
   document.addEventListener("click", async (event) => {
     const btn = event.target.closest("[data-delete-type]");
     if (!btn) return;
